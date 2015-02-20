@@ -27,9 +27,9 @@ from tastypie.serializers import Serializer
 from tastypie.utils import trailing_slash
 from tastypie.validation import Validation
 
-from oppia.api.serializers import PrettyJSONSerializer, CourseJSONSerializer, UserJSONSerializer
+from oppia.api.serializers import PrettyJSONSerializer, CourseJSONSerializer, UserJSONSerializer, ClientJSONSerializer
 from oppia.models import Activity, Section, Tracker, Course, CourseDownload, Media, Schedule, ActivitySchedule, Cohort, Tag, CourseTag
-from oppia.models import Points, Award, Badge, UserProfile
+from oppia.models import Points, Award, Badge, UserProfile, Client
 from oppia.profile.forms import RegisterForm
 from oppia.signals import course_downloaded
  
@@ -688,4 +688,66 @@ class AwardsResource(ModelResource):
     
     def dehydrate(self, bundle):
         bundle.data['award_date'] = bundle.data['award_date'].strftime("%Y-%m-%d %H:%M:%S")
+        return bundle
+
+class ClientsResource(ModelResource):
+    class Meta:
+        queryset = Client.objects.all()
+        allowed_methods = ['post']
+        resource_name = 'client'
+        include_resource_uri = False
+#         fields = ['date', 'description','points','type']
+        serializer = ClientJSONSerializer()
+        authentication = ApiKeyAuthentication()
+#         authorization = ReadOnlyAuthorization()
+        authorization = Authorization()
+        always_return_data = True
+
+    def obj_create(self, bundle, **kwargs):
+        clients = bundle.data['clients']
+
+        user = User.objects.get(username__exact=bundle.request.user.username)
+        clients = json.loads(clients)
+        clients = clients['clients']
+        clients_return = []
+        for client in clients:
+            if not (Client.objects.filter(id=client['clientServerId'])):
+                client_temp = Client()
+                client_temp.user = user
+
+                client_temp.age = client['clientAge']
+                client_temp.name = client['clientName']
+                client_temp.mobile_number = client['clientMobileNumber']
+#                 client_temp.created_date = datetime.datetime.now()
+                client_temp.gender = client['clientGender']
+#                 client_temp.lastmodified_date = datetime.datetime.now()
+                client_temp.marital_status = client['clientMaritalStatus']
+                client_temp.parity = client['clientParity']
+                client_temp.life_stage = client['clientLifeStage']
+                client_temp.save()
+            else:
+                client_exist = Client.objects.filter(id=int(client['clientServerId'])).first()
+                client_exist.user = user
+
+                client_exist.age = client['clientAge']
+                client_exist.name = client['clientName']
+                client_exist.mobile_number = client['clientMobileNumber']
+                client_exist.created_date = datetime.datetime.now()
+                client_exist.gender = client['clientGender']
+                client_exist.lastmodified_date = datetime.datetime.now()
+                client_exist.marital_status = client['clientMaritalStatus']
+                client_exist.parity = client['clientParity']
+                client_exist.life_stage = client['clientLifeStage']
+                client_exist.save()
+        synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
+        clients_retrieve_from_server = Client.objects.filter(lastmodified_date__gte=synctime)
+        clients_return.extend(clients_retrieve_from_server)
+        del bundle.data['clients']
+        from django.forms.models import model_to_dict
+        temp = []
+        for clien in clients_retrieve_from_server:
+            temp.append(model_to_dict(clien))
+        clients_return = json.dumps(temp)
+        bundle.data['clients'] = clients_return
+
         return bundle

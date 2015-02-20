@@ -2,7 +2,7 @@
 from django.contrib import admin
 from oppia.models import Course,Section,Activity,Tracker,Media,Cohort
 from oppia.models import Participant,Message,Schedule,ActivitySchedule,Tag,CourseTag
-from oppia.models import Badge,Award,Points,AwardCourse,CourseDownload, UserProfile
+from oppia.models import Badge,Award,Points,AwardCourse,CourseDownload, UserProfile, Client
 
 class TrackerAdmin(admin.ModelAdmin):
     list_display = ('user', 'submitted_date', 'tracker_date', 'time_taken', 'agent', 'course','completed')
@@ -62,6 +62,9 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name','created_date','created_by','description','order_priority','highlight')
     ordering = ['-order_priority','name'] 
     
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ('name', 'mobile_number', 'gender', 'marital_status', 'age', 'parity', 'life_stage', 'user')
+    
 admin.site.register(Activity, ActivityAdmin)   
 admin.site.register(ActivitySchedule,ActivityScheduleAdmin)
 admin.site.register(Award, AwardAdmin)
@@ -80,3 +83,4 @@ admin.site.register(Section,SectionAdmin)
 admin.site.register(Tag,TagAdmin)
 admin.site.register(Tracker, TrackerAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Client, ClientAdmin)

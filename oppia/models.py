@@ -665,7 +665,40 @@ class Points(models.Model):
         if score['total'] is None:
             return 0
         return score['total']
-    
 
-    
-    
+class Client(models.Model):
+    GENDER = (
+        ('male', 'Male'),
+        ('female', 'Female'),
+    )
+    MARITAL_STATUS = (
+        ('yes', 'YES'),
+        ('no', 'NO'),
+    )
+    CHILDREN_COUNT = (
+        ('0', '0'),
+        ('1', '1'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5+', '5+'),
+    )
+    LIFE_STAGE = (
+        ('adolescent', 'Adolescent'),
+        ('newlymarried', 'Newly Married'),
+        ('pregnant', 'Pregnant'),
+        ('onechild', 'One child'),
+        ('unwantedpregnancy', 'Unwanted Pregnancy'),
+        ('twoormorechildren', 'Two or more children'),
+    )
+    user = models.ForeignKey(User)
+    created_date = models.DateTimeField(auto_now_add=True, verbose_name='Created Date')
+    lastmodified_date = models.DateTimeField(auto_now=True, verbose_name='Modified Date')
+
+    name = models.TextField(blank=False)
+    mobile_number = models.IntegerField(blank=False)
+    gender = models.CharField(blank=False, choices=GENDER, max_length=6)
+    marital_status = models.CharField(blank=False,choices=MARITAL_STATUS, max_length=3)
+    age = models.IntegerField(blank=False)
+    parity = models.CharField(blank=False,choices=CHILDREN_COUNT, max_length=2)
+    life_stage = models.CharField(blank=False,choices=LIFE_STAGE, max_length=17)

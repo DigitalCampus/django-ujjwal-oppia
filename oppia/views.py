@@ -24,7 +24,7 @@ from django.utils import timezone
 
 from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
 from oppia.forms import ActivityScheduleForm, CohortForm
-from oppia.models import Course, Tracker, Tag, CourseTag, Schedule
+from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client
 from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points 
 from oppia.quiz.models import Quiz, QuizAttempt, QuizAttemptResponse
 
@@ -86,8 +86,10 @@ def home_view(request):
     else:
         form = None
     leaderboard = Points.get_leaderboard(10)
+    client = Client(name="test_name", age=33, gender='male', marital_status='no')
     return render_to_response('oppia/home.html',
                               {'form': form,
+                               'client': client,
                                'recent_activity':activity, 
                                'leaderboard':leaderboard}, 
                               context_instance=RequestContext(request))

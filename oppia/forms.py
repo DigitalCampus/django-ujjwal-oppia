@@ -11,6 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import FieldWithButtons
 from crispy_forms.layout import Button, Layout, Fieldset, ButtonHolder, Submit, Div, HTML, Row
+from models import Client
 
 from oppia.models import Schedule
 
@@ -216,4 +217,9 @@ class DateRangeIntervalForm(forms.Form):
         if start_date > end_date:
             raise forms.ValidationError("Start date must be before the end date.")
         
-        return cleaned_data     
+        return cleaned_data    
+    
+class ClientForm (forms.ModelForm) :
+    
+    class Meta :
+        model = Client 
