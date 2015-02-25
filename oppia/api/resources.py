@@ -691,47 +691,54 @@ class AwardsResource(ModelResource):
         return bundle
 
 class ClientsResource(ModelResource):
+
     class Meta:
         queryset = Client.objects.all()
         allowed_methods = ['post']
         resource_name = 'client'
+        fields = ['id', 'user', 'created_date', 'lastmodified_date', 'name', 'mobile_number', 'gender',
+                  'marital_stage', 'age', 'parity', 'life_stage']
         include_resource_uri = False
-#         fields = ['date', 'description','points','type']
         serializer = ClientJSONSerializer()
         authentication = ApiKeyAuthentication()
-#         authorization = ReadOnlyAuthorization()
         authorization = Authorization()
         always_return_data = True
 
-    def obj_create(self, bundle, **kwargs):
+    def obj_create(self, bundle, request=None, **kwargs):
+        naming_convention = {'id': 'clientServerId', 'name': 'clientName',
+                        'mobile_number': 'clientMobileNumber', 'age': 'clientAge',
+                        'gender': 'clientGender', 'marital_status': 'clientMaritalStatus',
+                        'parity': 'clientParity', 'life_stage': 'clientLifeStage',
+                        'lastmodified_date': 'clientLastModifiedDate', 'user': 'healthWorker'}
+
         clients = bundle.data['clients']
 
         user = User.objects.get(username__exact=bundle.request.user.username)
-        clients = json.loads(clients)
-        clients = clients['clients']
         clients_return = []
+        print clients
         for client in clients:
-            if not (Client.objects.filter(id=client['clientServerId'])):
+            if not (Client.objects.filter(id=int(client['clientServerId']))):
                 client_temp = Client()
                 client_temp.user = user
-
-                client_temp.age = client['clientAge']
+                
+                client_temp.age = int(client['clientAge'])
                 client_temp.name = client['clientName']
-                client_temp.mobile_number = client['clientMobileNumber']
-#                 client_temp.created_date = datetime.datetime.now()
+                client_temp.mobile_number = long(client['clientMobileNumber'])
+                client_temp.created_date = datetime.datetime.now()
                 client_temp.gender = client['clientGender']
-#                 client_temp.lastmodified_date = datetime.datetime.now()
+                client_temp.lastmodified_date = datetime.datetime.now()
                 client_temp.marital_status = client['clientMaritalStatus']
                 client_temp.parity = client['clientParity']
                 client_temp.life_stage = client['clientLifeStage']
                 client_temp.save()
+                bundle.obj = client_temp
             else:
                 client_exist = Client.objects.filter(id=int(client['clientServerId'])).first()
                 client_exist.user = user
 
-                client_exist.age = client['clientAge']
-                client_exist.name = client['clientName']
-                client_exist.mobile_number = client['clientMobileNumber']
+                client_exist.age = int(client['clientAge'])
+                client_exist.name = client['cl coc wikiientName']
+                client_exist.mobile_number = long(client['clientMobileNumber'])
                 client_exist.created_date = datetime.datetime.now()
                 client_exist.gender = client['clientGender']
                 client_exist.lastmodified_date = datetime.datetime.now()
@@ -739,6 +746,7 @@ class ClientsResource(ModelResource):
                 client_exist.parity = client['clientParity']
                 client_exist.life_stage = client['clientLifeStage']
                 client_exist.save()
+                bundle.obj = client_exist
         synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
         clients_retrieve_from_server = Client.objects.filter(lastmodified_date__gte=synctime)
         clients_return.extend(clients_retrieve_from_server)
@@ -746,8 +754,21 @@ class ClientsResource(ModelResource):
         from django.forms.models import model_to_dict
         temp = []
         for clien in clients_retrieve_from_server:
-            temp.append(model_to_dict(clien))
-        clients_return = json.dumps(temp)
-        bundle.data['clients'] = clients_return
-
+            clien = model_to_dict(clien)
+            for key in clien.keys():
+                if naming_convention.has_key(key):
+                    if key == 'user':
+                        user = User.objects.get(id__exact=clien[key])
+                        clien.pop(key)
+                        clien[naming_convention[key]] = user.username
+                    elif key == 'id':
+                        _id = clien.pop(key)
+                        clien[naming_convention[key]] = _id
+                        clien['clientId'] = _id
+                    else:
+                        clien[naming_convention[key]] = clien.pop(key)
+            temp.append(clien)
+        #clients_return = json.dumps(temp)
+        bundle.data['clients'] = temp
+        bundle.obj = Client.objects.filter(id__gt=1).first()
         return bundle
