@@ -59,6 +59,56 @@
 	<h3>{% trans 'home_leaderboard' %}</h3>
 	{% include "oppia/includes/leaderboard.html" %}
 	<div><a href="{% url 'oppia_leaderboard' %}">{% trans "more..." %}</a></div>
+    <br/><br/>
+    <!--label for="id_user" class="control-label  requiredField"> User</label>
+    <div class="input-group">
+
+
+        <select class="select form-control" id="id_user" name="user">
+
+        </select>
+        <span class="input-group-btn">
+            <input type="submit" name="submit" value="Go" class="btn btn-primary btn btn-default" id="submit-id-submit"> </span>
+
+    </div-->
+
+    <div>
+        <h3>Clients List</h3>
+
+        <div class="table-responsive">
+         <table class="table table-striped">
+         	 <thead>
+                <tr>
+                  <th>{% trans 'Client Name' %}</th>
+                  <th>{% trans 'User' %}</th>
+                  <th>{% trans 'Age' %}</th>
+                  <th>{% trans 'Gender' %}</th>
+                  <th>{% trans 'Mobile Number' %}</th>
+                  <th>{% trans 'Parity' %}</th>
+                  <th>{% trans 'Life Stage' %}</th>
+                </tr>
+              </thead>
+              <tbody>
+
+	{% for client in clients %}
+
+			<tr>
+				<td>{{ client.name }}</td>
+				<td>{{ client.user.username }}</td>
+                <td>{{ client.age }}</td>
+                <td>{{ client.gender }}</td>
+                <td>{{ client.mobile_number }}</td>
+                <td>{{ client.parity }}</td>
+                <td>{{ client.life_stage }}</td>
+
+			</tr>
+			{% endfor %}
+	    	</tbody>
+ 		</table>
+	</div>
+
+    </div>
+
 {% else %}
 	{% blocktrans %} 
 	<p align="center"><iframe width="400" height="315" src="http://www.youtube.com/embed/wHo5R_RgkG0" frameborder="0" allowfullscreen></iframe></p>

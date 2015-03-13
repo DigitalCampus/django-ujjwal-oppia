@@ -217,7 +217,8 @@ class DateRangeIntervalForm(forms.Form):
         if start_date > end_date:
             raise forms.ValidationError("Start date must be before the end date.")
         
-        return cleaned_data    
+        return cleaned_data
+
     
 class ClientForm (forms.ModelForm) :
     

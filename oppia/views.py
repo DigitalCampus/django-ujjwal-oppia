@@ -86,12 +86,17 @@ def home_view(request):
     else:
         form = None
     leaderboard = Points.get_leaderboard(10)
-    client = Client(name="test_name", age=33, gender='male', marital_status='no')
+    clients = Client.objects.all()
+    users = User.objects.all()
+    user_set = []
+    for user in users:
+        user_set.append((user.id, user.username))
     return render_to_response('oppia/home.html',
                               {'form': form,
-                               'client': client,
+                               'clients': clients,
                                'recent_activity':activity, 
-                               'leaderboard':leaderboard}, 
+                               'leaderboard':leaderboard,
+                               'user_set': user_set},
                               context_instance=RequestContext(request))
 
 def course_view(request):

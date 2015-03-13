@@ -2,6 +2,8 @@
 
 import datetime
 import json
+from itertools import izip_longest
+from operator import itemgetter
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render,render_to_response
 from django.template import RequestContext
@@ -12,7 +14,7 @@ from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 
 from oppia.forms import DateDiffForm
-from oppia.models import CourseDownload, Tracker, Course
+from oppia.models import CourseDownload, Tracker, Course, Section, Activity
 from oppia.viz.models import UserLocationVisualization
 
 
@@ -112,7 +114,59 @@ def summary_view(request):
     if i > 10:
         hits_percent = float(other_course_activity * 100.0/total_hits['total_hits'])
         hot_courses.append({'course':_('Other'),'hits_percent':hits_percent })
-                       
+
+    tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__gte=start_date).\
+                        extra(select={'month':'extract( month from submitted_date )',
+                                      'year':'extract( year from submitted_date )'}).\
+                        values('month', 'year', 'section_title').\
+                        annotate(count=Count('id')).annotate(acount=Count('section_title')). \
+                        order_by('activity_title', 'year', 'month')
+
+    tracker_dict = {}
+    for meth in tracker_methods:
+        key = str(str(meth['month'])+'-'+str(meth['year']))
+        if tracker_dict.has_key(str(meth['month'])+'-'+str(meth['year'])):
+            tracker_dict[key].append(meth)
+        else:
+            tracker_dict[key] = [meth]
+
+    previous_tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__lte=start_date).count()
+
+    films_activity = Tracker.objects.filter(Q(course_id=13), Q(type='page'),
+                                            Q(activity_title__icontains='Doctor Speaks') |
+                                            Q(activity_title__icontains='Real') |
+                                            Q(activity_title__icontains='Entertainment') |
+                                            Q(activity_title__icontains='TV')).values('activity_title', 'section_title').annotate(actCount=Count('activity_title'))
+    activity_list = set()
+    films_dict = {}
+    for film in films_activity:
+        act_title = json.loads(film['activity_title'])
+        act_title = act_title['en']
+        sec_title = json.loads(film['section_title'])
+        sec_title = sec_title['en']
+        activity_list.add(act_title)
+        if films_dict.has_key(sec_title):
+
+            films_dict[sec_title].append([act_title, film['actCount']])
+        else:
+            films_dict[sec_title] = [[act_title, film['actCount']]]
+
+    sorted_film_dict = {}
+
+    for key, value in films_dict.items():
+        temp_act_list = set()
+        for val in value:
+            activity_list.discard(val[0])
+            temp_act_list.add(val[0])
+        for val in activity_list:
+            value.append([val, 0])
+            temp_act_list.add(val)
+        activity_list.clear()
+        activity_list = temp_act_list
+        value = sorted(value, key=itemgetter(0))
+        sorted_film_dict[key] = value
+        activity_list = sorted(activity_list)
+        activity_list = set(activity_list)
     return render_to_response('oppia/viz/summary.html',
                               {'form': form, 
                                'user_registrations': user_registrations,
@@ -124,7 +178,10 @@ def summary_view(request):
                                'previous_course_downloads': previous_course_downloads,
                                'course_activity': course_activity, 
                                'previous_course_activity': previous_course_activity,
-                               'hot_courses': hot_courses, }, 
+                               'hot_courses': hot_courses,
+                               'tracker_methods': tracker_dict,
+                               'films_activity': sorted_film_dict,
+                               'activity_list': activity_list},
                               context_instance=RequestContext(request))
 
 def map_view(request):
