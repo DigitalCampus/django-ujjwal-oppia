@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
 
-from oppia.api.resources import TrackerResource, CourseResource, ScheduleResource, TagResource, ClientsResource
+from oppia.api.resources import TrackerResource, CourseResource, ScheduleResource, TagResource, ClientsResource, ClientTrackerResource
 from oppia.api.resources import PointsResource, AwardsResource, BadgesResource, RegisterResource, UserResource, ResetPasswordResource
 from oppia.quiz.api.resources import QuizResource, QuizPropsResource, QuestionResource
 from oppia.quiz.api.resources import QuizQuestionResource, ResponseResource, QuizAttemptResource
@@ -30,6 +30,7 @@ v1_api.register(ResponseResource())
 v1_api.register(QuizAttemptResource())
 
 v1_api.register(ClientsResource())
+v1_api.register(ClientTrackerResource())
 
 urlpatterns = patterns('',
 
@@ -52,7 +53,7 @@ urlpatterns = patterns('',
     url(r'^course/(?P<course_id>\d+)/cohort/$', 'oppia.views.cohort', name="oppia_cohorts"),
     url(r'^course/(?P<course_id>\d+)/cohort/add/$', 'oppia.views.cohort_add', name="oppia_cohort_add"),
     url(r'^course/(?P<course_id>\d+)/cohort/(?P<cohort_id>\d+)/edit/$', 'oppia.views.cohort_edit', name="oppia_cohort_edit"),
-    #url(r'^course/(?P<course_id>\d+)/cohort/(?P<cohort_id>\d+)/delete/$', 'oppia.views.cohort_delete', name="oppia_cohort_delete"),
+    # url(r'^course/(?P<course_id>\d+)/cohort/(?P<cohort_id>\d+)/delete/$', 'oppia.views.cohort_delete', name="oppia_cohort_delete"),
     url(r'^course/(?P<course_id>\d+)/quiz/$', 'oppia.views.course_quiz', name="oppia_course_quiz"),
     url(r'^course/(?P<course_id>\d+)/quiz/(?P<quiz_id>\d+)/attempts/$', 'oppia.views.course_quiz_attempts', name="oppia_course_quiz_attempts"),
     url(r'^course/(?P<course_id>\d+)/feedback/$', 'oppia.views.course_feedback', name="oppia_course_feedback"),

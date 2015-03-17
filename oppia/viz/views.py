@@ -5,7 +5,7 @@ import json
 from itertools import izip_longest
 from operator import itemgetter
 from django.http import HttpResponseRedirect, Http404, HttpResponse
-from django.shortcuts import render,render_to_response
+from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Count, Sum, Q
@@ -14,7 +14,7 @@ from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 
 from oppia.forms import DateDiffForm
-from oppia.models import CourseDownload, Tracker, Course, Section, Activity
+from oppia.models import CourseDownload, Tracker, Course, ClientTracker
 from oppia.viz.models import UserLocationVisualization
 
 
@@ -36,13 +36,25 @@ def summary_view(request):
     user_registrations = User.objects.filter(date_joined__gte=start_date).\
                         extra(select={'month':'extract( month from date_joined )',
                                       'year':'extract( year from date_joined )'}).\
-                        values('month','year').\
-                        annotate(count=Count('id')).order_by('year','month')
+                        values('month', 'year').\
+                        annotate(count=Count('id')).order_by('year', 'month')
     
     previous_user_registrations = User.objects.filter(date_joined__lt=start_date).count()
 
+    # Unique or Repeated Clients
+
+    clients = ClientTracker.objects.filter(end_time__gte=start_date).\
+                        extra(select={'month':'extract( month from date_joined )',
+                                      'year':'extract( year from date_joined )'}).\
+                        values('month', 'year').\
+                        annotate(count=Count('id')).order_by('year', 'month')
+
+    previous_clients = User.objects.filter(start_time__lt=start_date).count()
+
+
+
     # Countries
-    hits_by_country =  UserLocationVisualization.objects.all().values('country_code','country_name').annotate(country_total_hits=Sum('hits')).order_by('-country_total_hits')
+    hits_by_country = UserLocationVisualization.objects.all().values('country_code', 'country_name').annotate(country_total_hits=Sum('hits')).order_by('-country_total_hits')
     total_hits = UserLocationVisualization.objects.all().aggregate(total_hits=Sum('hits'))
     total_countries = hits_by_country.count()
     
@@ -51,14 +63,14 @@ def summary_view(request):
     other_country_activity = 0
     for c in hits_by_country:
         if i < 20:
-            hits_percent = float(c['country_total_hits'] * 100.0/total_hits['total_hits'])
-            country_activity.append({'country_code':c['country_code'],'country_name':c['country_name'],'hits_percent':hits_percent })
+            hits_percent = float(c['country_total_hits'] * 100.0 / total_hits['total_hits'])
+            country_activity.append({'country_code':c['country_code'], 'country_name':c['country_name'], 'hits_percent':hits_percent })
         else:
             other_country_activity += c['country_total_hits']
         i += 1
     if i > 20:
-        hits_percent = float(other_country_activity * 100.0/total_hits['total_hits'])
-        country_activity.append({'country_code':None,'country_name':_('Other'),'hits_percent':hits_percent })
+        hits_percent = float(other_country_activity * 100.0 / total_hits['total_hits'])
+        country_activity.append({'country_code':None, 'country_name':_('Other'), 'hits_percent':hits_percent })
         
     # Language
     hit_by_language = Tracker.objects.filter(user__is_staff=False).exclude(lang=None).values('lang').annotate(total_hits=Count('id')).order_by('-total_hits')
@@ -69,21 +81,21 @@ def summary_view(request):
     other_languages = 0
     for hbl in hit_by_language:
         if i < 10:
-            hits_percent = float(hbl['total_hits'] * 100.0/total_hits['total_hits'])
-            languages.append({'lang':hbl['lang'],'hits_percent':hits_percent })
+            hits_percent = float(hbl['total_hits'] * 100.0 / total_hits['total_hits'])
+            languages.append({'lang':hbl['lang'], 'hits_percent':hits_percent })
         else:
             other_languages += hbl['total_hits']
         i += 1
     if i > 10:
-        hits_percent = float(other_languages * 100.0/total_hits['total_hits'])
-        languages.append({'lang':_('Other'),'hits_percent':hits_percent })
+        hits_percent = float(other_languages * 100.0 / total_hits['total_hits'])
+        languages.append({'lang':_('Other'), 'hits_percent':hits_percent })
         
     # Course Downloads
-    course_downloads = CourseDownload.objects.filter(user__is_staff=False, download_date__gte=start_date ).\
+    course_downloads = CourseDownload.objects.filter(user__is_staff=False, download_date__gte=start_date).\
                         extra(select={'month':'extract( month from download_date )',
                                       'year':'extract( year from download_date )'}).\
-                        values('month','year').\
-                        annotate(count=Count('id')).order_by('year','month')
+                        values('month', 'year').\
+                        annotate(count=Count('id')).order_by('year', 'month')
                         
     previous_course_downloads = CourseDownload.objects.filter(user__is_staff=False, download_date__lt=start_date).count()
     
@@ -91,8 +103,8 @@ def summary_view(request):
     course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=start_date).\
                         extra(select={'month':'extract( month from submitted_date )',
                                       'year':'extract( year from submitted_date )'}).\
-                        values('month','year').\
-                        annotate(count=Count('id')).order_by('year','month')
+                        values('month', 'year').\
+                        annotate(count=Count('id')).order_by('year', 'month')
     
     previous_course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__lt=start_date).count()
                         
@@ -105,15 +117,15 @@ def summary_view(request):
     other_course_activity = 0
     for hbc in hit_by_course:
         if i < 10:
-            hits_percent = float(hbc['total_hits'] * 100.0/total_hits['total_hits'])
+            hits_percent = float(hbc['total_hits'] * 100.0 / total_hits['total_hits'])
             course = Course.objects.get(id=hbc['course_id'])
-            hot_courses.append({'course':course,'hits_percent':hits_percent })
+            hot_courses.append({'course':course, 'hits_percent':hits_percent })
         else:
             other_course_activity += hbc['total_hits']
         i += 1
     if i > 10:
-        hits_percent = float(other_course_activity * 100.0/total_hits['total_hits'])
-        hot_courses.append({'course':_('Other'),'hits_percent':hits_percent })
+        hits_percent = float(other_course_activity * 100.0 / total_hits['total_hits'])
+        hot_courses.append({'course':_('Other'), 'hits_percent':hits_percent })
 
     tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__gte=start_date).\
                         extra(select={'month':'extract( month from submitted_date )',
@@ -124,8 +136,8 @@ def summary_view(request):
 
     tracker_dict = {}
     for meth in tracker_methods:
-        key = str(str(meth['month'])+'-'+str(meth['year']))
-        if tracker_dict.has_key(str(meth['month'])+'-'+str(meth['year'])):
+        key = str(str(meth['month']) + '-' + str(meth['year']))
+        if tracker_dict.has_key(str(meth['month']) + '-' + str(meth['year'])):
             tracker_dict[key].append(meth)
         else:
             tracker_dict[key] = [meth]
@@ -133,9 +145,9 @@ def summary_view(request):
     previous_tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__lte=start_date).count()
 
     films_activity = Tracker.objects.filter(Q(course_id=13), Q(type='page'),
-                                            Q(activity_title__icontains='Doctor Speaks') |
-                                            Q(activity_title__icontains='Real') |
-                                            Q(activity_title__icontains='Entertainment') |
+                                            Q(activity_title__icontains='Doctor Speaks') | 
+                                            Q(activity_title__icontains='Real') | 
+                                            Q(activity_title__icontains='Entertainment') | 
                                             Q(activity_title__icontains='TV')).values('activity_title', 'section_title').annotate(actCount=Count('activity_title'))
     activity_list = set()
     films_dict = {}
@@ -168,15 +180,15 @@ def summary_view(request):
         activity_list = sorted(activity_list)
         activity_list = set(activity_list)
     return render_to_response('oppia/viz/summary.html',
-                              {'form': form, 
+                              {'form': form,
                                'user_registrations': user_registrations,
-                               'previous_user_registrations': previous_user_registrations, 
+                               'previous_user_registrations': previous_user_registrations,
                                'total_countries': total_countries,
                                'country_activity': country_activity,
                                'languages': languages,
                                'course_downloads': course_downloads,
                                'previous_course_downloads': previous_course_downloads,
-                               'course_activity': course_activity, 
+                               'course_activity': course_activity,
                                'previous_course_activity': previous_course_activity,
                                'hot_courses': hot_courses,
                                'tracker_methods': tracker_dict,
@@ -185,5 +197,5 @@ def summary_view(request):
                               context_instance=RequestContext(request))
 
 def map_view(request):
-    return render_to_response('oppia/viz/map.html', 
+    return render_to_response('oppia/viz/map.html',
                               context_instance=RequestContext(request))

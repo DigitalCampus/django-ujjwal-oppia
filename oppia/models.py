@@ -23,14 +23,14 @@ class UserProfile (models.Model):
 
 class Course(models.Model):
     user = models.ForeignKey(User)
-    created_date = models.DateTimeField('date created',default=timezone.now)
-    lastupdated_date = models.DateTimeField('date updated',default=timezone.now)
+    created_date = models.DateTimeField('date created', default=timezone.now)
+    lastupdated_date = models.DateTimeField('date updated', default=timezone.now)
     version = models.BigIntegerField()
     title = models.TextField(blank=False)
     description = models.TextField(blank=True, null=True, default=None)
     shortname = models.CharField(max_length=20)
     filename = models.CharField(max_length=200)
-    badge_icon = models.FileField(upload_to="badges",blank=True, default=None)
+    badge_icon = models.FileField(upload_to="badges", blank=True, default=None)
     is_draft = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
    
@@ -44,7 +44,7 @@ class Course(models.Model):
     def getAbsPath(self):
         return settings.COURSE_UPLOAD_DIR + self.filename
     
-    def get_title(self,lang='en'):
+    def get_title(self, lang='en'):
         try:
             titles = json.loads(self.title)
             if lang in titles:
@@ -56,8 +56,8 @@ class Course(models.Model):
             pass
         return self.title 
      
-    def is_first_download(self,user):
-        no_attempts = CourseDownload.objects.filter(user=user,course=self).count()
+    def is_first_download(self, user):
+        no_attempts = CourseDownload.objects.filter(user=user, course=self).count()
         is_first_download = False
         if no_attempts == 1:
             is_first_download = True
@@ -73,7 +73,7 @@ class Course(models.Model):
     
     def get_default_schedule(self):
         try:
-            schedule = Schedule.objects.get(default=True,course = self)
+            schedule = Schedule.objects.get(default=True, course=self)
         except Schedule.DoesNotExist:
             return None
         return schedule
@@ -91,14 +91,14 @@ class Course(models.Model):
                                       tracker_date__gte=last_week).count()
                                       
     def has_quizzes(self):
-        quiz_count = Activity.objects.filter(section__course=self,type='quiz').count()
+        quiz_count = Activity.objects.filter(section__course=self, type='quiz').count()
         if quiz_count > 0:
             return True
         else:
             return False
     
     def has_feedback(self):
-        fb_count = Activity.objects.filter(section__course=self,type='feedback').count()
+        fb_count = Activity.objects.filter(section__course=self, type='feedback').count()
         if fb_count > 0:
             return True
         else:
@@ -117,7 +117,7 @@ class Course(models.Model):
         
 class Tag(models.Model):
     name = models.TextField(blank=False)
-    created_date = models.DateTimeField('date created',default=timezone.now)
+    created_date = models.DateTimeField('date created', default=timezone.now)
     created_by = models.ForeignKey(User)
     courses = models.ManyToManyField(Course, through='CourseTag')
     description = models.TextField(blank=True, null=True, default=None)
@@ -144,8 +144,8 @@ class Schedule(models.Model):
     title = models.TextField(blank=False)
     course = models.ForeignKey(Course)
     default = models.BooleanField(default=False)
-    created_date = models.DateTimeField('date created',default=timezone.now)
-    lastupdated_date = models.DateTimeField('date updated',default=timezone.now)
+    created_date = models.DateTimeField('date created', default=timezone.now)
+    lastupdated_date = models.DateTimeField('date updated', default=timezone.now)
     created_by = models.ForeignKey(User)
     
     class Meta:
@@ -158,14 +158,14 @@ class Schedule(models.Model):
     def to_xml_string(self):
         doc = Document();
         schedule = doc.createElement('schedule')
-        schedule.setAttribute('version',self.lastupdated_date.strftime('%Y%m%d%H%M%S'))
+        schedule.setAttribute('version', self.lastupdated_date.strftime('%Y%m%d%H%M%S'))
         doc.appendChild(schedule)
         act_scheds = ActivitySchedule.objects.filter(schedule=self)
         for acts in act_scheds:
             act = doc.createElement('activity')
-            act.setAttribute('digest',acts.digest)
-            act.setAttribute('startdate',acts.start_date.strftime('%Y-%m-%d %H:%M:%S'))
-            act.setAttribute('enddate',acts.end_date.strftime('%Y-%m-%d %H:%M:%S'))
+            act.setAttribute('digest', acts.digest)
+            act.setAttribute('startdate', acts.start_date.strftime('%Y-%m-%d %H:%M:%S'))
+            act.setAttribute('enddate', acts.end_date.strftime('%Y-%m-%d %H:%M:%S'))
             schedule.appendChild(act)
         return doc.toxml()
         
@@ -191,7 +191,7 @@ class Section(models.Model):
     def __unicode__(self):
         return self.get_title()
     
-    def get_title(self,lang='en'):
+    def get_title(self, lang='en'):
         try:
             titles = json.loads(self.title)
             if lang in titles:
@@ -225,7 +225,7 @@ class Activity(models.Model):
         verbose_name = _('Activity')
         verbose_name_plural = _('Activities')
         
-    def get_title(self,lang='en'):
+    def get_title(self, lang='en'):
         try:
             titles = json.loads(self.title)
             if lang in titles:
@@ -237,7 +237,7 @@ class Activity(models.Model):
             pass
         return self.title
     
-    def get_content(self,lang='en'):
+    def get_content(self, lang='en'):
         try:
             contents = json.loads(self.content)
             if lang in contents:
@@ -251,21 +251,21 @@ class Activity(models.Model):
     
     def get_next_activity(self):
         try:
-            next_activity = Activity.objects.get(section__course=self.section.course,order=self.order+1,section=self.section)
+            next_activity = Activity.objects.get(section__course=self.section.course, order=self.order + 1, section=self.section)
         except Activity.DoesNotExist:
             try:
-                next_activity = Activity.objects.get(section__course=self.section.course, section__order=self.section.order+1,order=1)
+                next_activity = Activity.objects.get(section__course=self.section.course, section__order=self.section.order + 1, order=1)
             except Activity.DoesNotExist:
                 next_activity = None
         return next_activity
         
     def get_previous_activity(self):
         try:
-            prev_activity = Activity.objects.get(section__course=self.section.course,order=self.order-1,section=self.section)
+            prev_activity = Activity.objects.get(section__course=self.section.course, order=self.order - 1, section=self.section)
         except Activity.DoesNotExist:
             try:
-                max_order = Activity.objects.filter(section__course=self.section.course,section__order=self.section.order-1).aggregate(max_order=Max('order'))
-                prev_activity = Activity.objects.get(section__course=self.section.course,section__order=self.section.order-1,order=max_order['max_order'])
+                max_order = Activity.objects.filter(section__course=self.section.course, section__order=self.section.order - 1).aggregate(max_order=Max('order'))
+                prev_activity = Activity.objects.get(section__course=self.section.course, section__order=self.section.order - 1, order=max_order['max_order'])
             except:
                 prev_activity = None        
         return prev_activity
@@ -275,8 +275,8 @@ class Media(models.Model):
     digest = models.CharField(max_length=100)
     filename = models.CharField(max_length=200)
     download_url = models.URLField()
-    filesize = models.BigIntegerField(default=None,blank=True,null=True)
-    media_length = models.IntegerField(default=None,blank=True,null=True)
+    filesize = models.BigIntegerField(default=None, blank=True, null=True)
+    media_length = models.IntegerField(default=None, blank=True, null=True)
     
     class Meta:
         verbose_name = _('Media')
@@ -287,20 +287,20 @@ class Media(models.Model):
     
 class Tracker(models.Model):
     user = models.ForeignKey(User)
-    submitted_date = models.DateTimeField('date submitted',default=timezone.now)
-    tracker_date = models.DateTimeField('date tracked',default=timezone.now)
+    submitted_date = models.DateTimeField('date submitted', default=timezone.now)
+    tracker_date = models.DateTimeField('date tracked', default=timezone.now)
     ip = models.IPAddressField()
     agent = models.TextField(blank=True)
     digest = models.CharField(max_length=100)
     data = models.TextField(blank=True)
-    course = models.ForeignKey(Course,null=True, blank=True, default=None)
-    type = models.CharField(max_length=10,null=True, blank=True, default=None)
+    course = models.ForeignKey(Course, null=True, blank=True, default=None)
+    type = models.CharField(max_length=10, null=True, blank=True, default=None)
     completed = models.BooleanField(default=False)
     time_taken = models.IntegerField(default=0)
     activity_title = models.TextField(blank=True, null=True, default=None)
     section_title = models.TextField(blank=True, null=True, default=None)
     uuid = models.TextField(blank=True, null=True, default=None)
-    lang = models.CharField(max_length=10,null=True, blank=True, default=None)
+    lang = models.CharField(max_length=10, null=True, blank=True, default=None)
     
     class Meta:
         verbose_name = _('Tracker')
@@ -310,8 +310,8 @@ class Tracker(models.Model):
         return self.agent
     
     def is_first_tracker_today(self):
-        olddate = timezone.now() + datetime.timedelta(hours=-24)
-        no_attempts_today = Tracker.objects.filter(user=self.user,digest=self.digest,completed=True,submitted_date__gte=olddate).count()
+        olddate = timezone.now() + datetime.timedelta(hours= -24)
+        no_attempts_today = Tracker.objects.filter(user=self.user, digest=self.digest, completed=True, submitted_date__gte=olddate).count()
         if no_attempts_today == 1:
             return True
         else:
@@ -369,28 +369,28 @@ class Tracker(models.Model):
         return False
  
     @staticmethod
-    def has_completed_trackers(course,user):
-        count = Tracker.objects.filter(user=user, course=course,completed=True).count()        
+    def has_completed_trackers(course, user):
+        count = Tracker.objects.filter(user=user, course=course, completed=True).count()        
         if count > 0:
             return True
         return False
      
     @staticmethod
-    def to_xml_string(course,user):
+    def to_xml_string(course, user):
         doc = Document();
         trackerXML = doc.createElement('trackers')
         doc.appendChild(trackerXML)
-        trackers = Tracker.objects.filter(user=user, course=course,completed=True).values('digest').annotate(max_tracker=Max('submitted_date'))
+        trackers = Tracker.objects.filter(user=user, course=course, completed=True).values('digest').annotate(max_tracker=Max('submitted_date'))
         for t in trackers:
             track = doc.createElement('tracker')
-            track.setAttribute('digest',t['digest'])
-            track.setAttribute('submitteddate',t['max_tracker'].strftime('%Y-%m-%d %H:%M:%S'))
+            track.setAttribute('digest', t['digest'])
+            track.setAttribute('submitteddate', t['max_tracker'].strftime('%Y-%m-%d %H:%M:%S'))
             trackerXML.appendChild(track)
         return doc.toxml() 
     
     @staticmethod
-    def activity_views(user,type,start_date=None,end_date=None,course=None):
-        results = Tracker.objects.filter(user=user,type=type)
+    def activity_views(user, type, start_date=None, end_date=None, course=None):
+        results = Tracker.objects.filter(user=user, type=type)
         if start_date:
             results = results.filter(submitted_date__gte=start_date)
         if end_date:
@@ -400,8 +400,8 @@ class Tracker(models.Model):
         return results.count()
     
     @staticmethod
-    def activity_secs(user,type,start_date=None,end_date=None,course=None):
-        results = Tracker.objects.filter(user=user,type=type)
+    def activity_secs(user, type, start_date=None, end_date=None, course=None):
+        results = Tracker.objects.filter(user=user, type=type)
         if start_date:
             results = results.filter(submitted_date__gte=start_date)
         if end_date:
@@ -426,10 +426,10 @@ class Tracker(models.Model):
 class CourseDownload(models.Model):
     user = models.ForeignKey(User)
     course = models.ForeignKey(Course)
-    download_date = models.DateTimeField('date downloaded',default=timezone.now)
+    download_date = models.DateTimeField('date downloaded', default=timezone.now)
     course_version = models.BigIntegerField(default=0)
-    ip = models.IPAddressField(blank=True,default=None)
-    agent = models.TextField(blank=True,default=None)
+    ip = models.IPAddressField(blank=True, default=None)
+    agent = models.TextField(blank=True, default=None)
     
     class Meta:
         verbose_name = _('CourseDownload')
@@ -440,7 +440,7 @@ class Cohort(models.Model):
     description = models.CharField(max_length=100)
     start_date = models.DateTimeField(default=timezone.now)
     end_date = models.DateTimeField(default=timezone.now)
-    schedule = models.ForeignKey(Schedule,null=True, blank=True, default=None)
+    schedule = models.ForeignKey(Schedule, null=True, blank=True, default=None)
     
     class Meta:
         verbose_name = _('Cohort')
@@ -457,29 +457,29 @@ class Cohort(models.Model):
     
     
     @staticmethod
-    def student_member_now(course,user):
+    def student_member_now(course, user):
         now = timezone.now()
-        cohorts = Cohort.objects.filter(course=course,start_date__lte=now,end_date__gte=now)
+        cohorts = Cohort.objects.filter(course=course, start_date__lte=now, end_date__gte=now)
         for c in cohorts:
-            participants = c.participant_set.filter(user=user,role=Participant.STUDENT)
+            participants = c.participant_set.filter(user=user, role=Participant.STUDENT)
             for p in participants:
                 return c
         return None
     
     @staticmethod
-    def teacher_member_now(course,user):
+    def teacher_member_now(course, user):
         now = timezone.now()
-        cohorts = Cohort.objects.filter(course=course,start_date__lte=now,end_date__gte=now)
+        cohorts = Cohort.objects.filter(course=course, start_date__lte=now, end_date__gte=now)
         for c in cohorts:
-            participants = c.participant_set.filter(user=user,role=Participant.TEACHER)
+            participants = c.participant_set.filter(user=user, role=Participant.TEACHER)
             for p in participants:
                 return c
         return None
     
     @staticmethod
-    def member_now(course,user):
+    def member_now(course, user):
         now = timezone.now()
-        cohorts = Cohort.objects.filter(course=course,start_date__lte=now,end_date__gte=now)
+        cohorts = Cohort.objects.filter(course=course, start_date__lte=now, end_date__gte=now)
         for c in cohorts:
             participants = c.participant_set.filter(user=user)
             for p in participants:
@@ -495,7 +495,7 @@ class Participant(models.Model):
     )
     cohort = models.ForeignKey(Cohort)
     user = models.ForeignKey(User)
-    role = models.CharField(max_length=20,choices=ROLE_TYPES)
+    role = models.CharField(max_length=20, choices=ROLE_TYPES)
     
     class Meta:
         verbose_name = _('Participant')
@@ -533,7 +533,7 @@ class Award(models.Model):
     badge = models.ForeignKey(Badge)
     user = models.ForeignKey(User)
     description = models.TextField(blank=False)
-    award_date = models.DateTimeField('date awarded',default=timezone.now)
+    award_date = models.DateTimeField('date awarded', default=timezone.now)
     
     class Meta:
         verbose_name = _('Award')
@@ -581,13 +581,13 @@ class Points(models.Model):
         ('coursedownloaded', 'Course downloaded'),
     )
     user = models.ForeignKey(User)
-    course = models.ForeignKey(Course,null=True)
-    cohort = models.ForeignKey(Cohort,null=True)
+    course = models.ForeignKey(Course, null=True)
+    cohort = models.ForeignKey(Cohort, null=True)
     points = models.IntegerField()
-    date = models.DateTimeField('date created',default=timezone.now)
+    date = models.DateTimeField('date created', default=timezone.now)
     description = models.TextField(blank=False)
     data = models.TextField(blank=True)
-    type = models.CharField(max_length=20,choices=POINT_TYPES)
+    type = models.CharField(max_length=20, choices=POINT_TYPES)
 
     class Meta:
         verbose_name = _('Points')
@@ -612,7 +612,7 @@ class Points(models.Model):
             users = users.annotate(total=Sum('points__points')).order_by('-total')[:count]
             
         for u in users:
-            u.badges = Award.get_userawards(u,course)
+            u.badges = Award.get_userawards(u, course)
             if u.total is None:
                 u.total = 0
         return users
@@ -625,8 +625,8 @@ class Points(models.Model):
         return score['total']
     
     @staticmethod
-    def media_points(user,start_date=None,end_date=None,course=None):
-        results = Points.objects.filter(user=user,type='mediaplayed')
+    def media_points(user, start_date=None, end_date=None, course=None):
+        results = Points.objects.filter(user=user, type='mediaplayed')
         if start_date:
             results = results.filter(date__gte=start_date)
         if end_date:
@@ -639,8 +639,8 @@ class Points(models.Model):
         return score['total']
     
     @staticmethod
-    def page_points(user,start_date=None,end_date=None,course=None):
-        results = Points.objects.filter(user=user,type='activitycompleted')
+    def page_points(user, start_date=None, end_date=None, course=None):
+        results = Points.objects.filter(user=user, type='activitycompleted')
         if start_date:
             results = results.filter(date__gte=start_date)
         if end_date:
@@ -653,8 +653,8 @@ class Points(models.Model):
         return score['total']
     
     @staticmethod
-    def quiz_points(user,start_date=None,end_date=None,course=None):
-        results = Points.objects.filter(user=user).filter(Q(type='firstattempt') | Q(type='firstattemptscore') | Q(type='firstattemptbonus')| Q(type='quizattempt'))
+    def quiz_points(user, start_date=None, end_date=None, course=None):
+        results = Points.objects.filter(user=user).filter(Q(type='firstattempt') | Q(type='firstattemptscore') | Q(type='firstattemptbonus') | Q(type='quizattempt'))
         if start_date:
             results = results.filter(date__gte=start_date)
         if end_date:
@@ -698,7 +698,13 @@ class Client(models.Model):
     name = models.TextField(blank=False)
     mobile_number = models.BigIntegerField(blank=False)
     gender = models.CharField(blank=False, choices=GENDER, max_length=10)
-    marital_status = models.CharField(blank=False,choices=MARITAL_STATUS, max_length=10)
+    marital_status = models.CharField(blank=False, choices=MARITAL_STATUS, max_length=10)
     age = models.IntegerField(blank=False)
-    parity = models.CharField(blank=False,choices=CHILDREN_COUNT, max_length=10)
-    life_stage = models.CharField(blank=False,choices=LIFE_STAGE, max_length=27)
+    parity = models.CharField(blank=False, choices=CHILDREN_COUNT, max_length=10)
+    life_stage = models.CharField(blank=False, choices=LIFE_STAGE, max_length=27)
+
+class ClientTracker(models.Model):
+    user = models.ForeignKey(User)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    client = models.ForeignKey(Client)
