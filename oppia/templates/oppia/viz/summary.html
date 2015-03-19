@@ -241,19 +241,13 @@
 
             var data9 = new google.visualization.DataTable();
 			    data9.addColumn('string', "Month/Year");
-                 data9.addColumn('number', "Method-1 (IUCD)");
-                 data9.addColumn('number', "Method-2 (Injectable)");
-                 data9.addColumn('number', "Method-3 (Condom)");
-                 data9.addColumn('number', "Method-4 (OCP)");
-                 data9.addColumn('number', "Method-5 (NSV)");
-        data9.addColumn('number', "Method-5 (NSV)");
-        data9.addColumn('number', "Method-5 (NSV)");
-        data9.addColumn('number', "Method-5 (NSV)");
-        data9.addColumn('number', "Method-5 (NSV)");
+            {% for sec in sections_list %}
+                data9.addColumn('number', "{{ sec }}")
+            {% endfor %}
 
-			data9.addRows( {{ tracker_methods|length }} );
+            data9.addRows( {{ tracker_methods|length }} );
 
-			{% for key, value in tracker_methods.items %}
+            {% for value in tracker_methods %}
                 data9.setValue({{ forloop.counter0 }},0,'{{ value.0.month }}-{{ value.0.year }}');
                 {% for val in value %}
 				    data9.setValue({{ forloop.parentloop.counter0 }}, {{ forloop.counter }},{{ val.count }});
@@ -300,6 +294,36 @@
 								animation: {startup: 'true'},
 								isStacked: true
 	                			});
+
+            var data12 = new google.visualization.DataTable();
+            data12.addColumn('string', "Film Category");
+
+            data12.addColumn('number', "{% trans 'Completed' %}");
+            data12.addColumn('number', "{% trans 'Not Completed' %}");
+
+
+            data12.addRows({{ films_completed|length }});
+
+            {% for value in films_completed %}
+                data12.setValue({{ forloop.counter0 }}, 0, '{{ value.section }}');
+                data12.setValue({{ forloop.counter0 }}, 1, '{{ value.completed }}');
+                data12.setValue({{ forloop.counter0 }}, 2, '{{ value.partial }}');
+
+            {% endfor %}
+
+            var chart12 = new google.visualization.ColumnChart(document.getElementById('film_completed_per_method_chart_div'));
+            chart12.draw(data12, {    width: '100%',
+                height: 400,
+                vAxis: {minValue: 0},
+                pointSize: 3,
+                chartArea: {left: 45, width: "75%", height: "75%"},
+                backgroundColor: 'transparent',
+                legend: {position: 'right'},
+                title: 'Films shown for Method',
+                bar: { groupWidth: '50%' },
+                animation: {startup: 'true'},
+                isStacked: true
+            });
 
             var data11 = new google.visualization.DataTable();
             data11.addColumn('string', 'Month/Year');
@@ -361,6 +385,10 @@
 
 <h3>{% trans 'Films Used for Method' %}</h3>
 <div id="film_mix_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif" alt="{% trans 'graph_generating'%}"/></div>
+
+    <div id="film_completed_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                                     alt="{% trans 'graph_generating' %}"/></div>
+
 
     <h3>{% trans 'Unique & Repeat Clients Counselled' %}</h3>
     <div id="new_unique_counselled_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
