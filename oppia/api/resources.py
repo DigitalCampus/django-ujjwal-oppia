@@ -13,7 +13,7 @@ from django.core import serializers
 from django.core.mail import send_mail
 from django.core.servers.basehttp import FileWrapper
 from django.db import IntegrityError
-from django.http import HttpRequest, HttpResponse , Http404
+from django.http import HttpRequest, HttpResponse, Http404
 from django.utils.translation import ugettext_lazy as _
 
 from tastypie import fields, bundle, http
@@ -27,30 +27,26 @@ from tastypie.serializers import Serializer
 from tastypie.utils import trailing_slash
 from tastypie.validation import Validation
 
-from oppia.api.serializers import PrettyJSONSerializer, CourseJSONSerializer, UserJSONSerializer, ClientJSONSerializer, ClientTrackerJSONSerializer
-from oppia.models import Activity, Section, Tracker, Course, CourseDownload, Media, Schedule, ActivitySchedule, Cohort, Tag, CourseTag
+from oppia.api.serializers import PrettyJSONSerializer, CourseJSONSerializer, UserJSONSerializer, ClientJSONSerializer, \
+    ClientTrackerJSONSerializer
+from oppia.models import Activity, Section, Tracker, Course, CourseDownload, Media, Schedule, ActivitySchedule, Cohort, \
+    Tag, CourseTag
 from oppia.models import Points, Award, Badge, UserProfile, Client, ClientTracker
 from oppia.profile.forms import RegisterForm
 from oppia.signals import course_downloaded
 
+
 class UserResource(ModelResource):
     '''
     For user login
-
     Usage:
     POST request to ``http://localhost/api/v1/user/``
-
     Required arguments:
-
     * ``username``
     * ``password``
-
     Returns (if authorized):
-
     Object with ``first_name``, ``last_name``, ``api_key``, ``last_login``, ``username``, ``points``, ``badges``, and ``scoring``
-
     If unauthorized returns an HTTP 401 response
-
     '''
     points = fields.IntegerField(readonly=True)
     badges = fields.IntegerField(readonly=True)
@@ -117,6 +113,7 @@ class UserResource(ModelResource):
 
     def dehydrate_metadata(self, bundle):
         return settings.OPPIA_METADATA
+
 
 class RegisterResource(ModelResource):
     '''
@@ -217,6 +214,7 @@ class RegisterResource(ModelResource):
     def dehydrate_metadata(self, bundle):
         return settings.OPPIA_METADATA
 
+
 class ResetPasswordResource(ModelResource):
     '''
     For resetting user password
@@ -252,8 +250,8 @@ class ResetPasswordResource(ModelResource):
                 prefix = 'http://'
             # TODO - better way to manage email message content
             send_mail('OppiaMobile: Password reset', 'Here is your new password for OppiaMobile: ' + newpass
-                      + '\n\nWhen you next log in you can update your password to something more memorable.'
-                      + '\n\n' + prefix + bundle.request.META['SERVER_NAME'] ,
+                                                     + '\n\nWhen you next log in you can update your password to something more memorable.'
+                                                     + '\n\n' + prefix + bundle.request.META['SERVER_NAME'],
                       settings.SERVER_EMAIL, [user.email], fail_silently=False)
         except User.DoesNotExist:
             pass
@@ -263,6 +261,7 @@ class ResetPasswordResource(ModelResource):
     def dehydrate_message(self, bundle):
         message = _(u'An email has been sent to your registered email address with your new password')
         return message
+
 
 class TrackerResource(ModelResource):
     '''
@@ -284,7 +283,8 @@ class TrackerResource(ModelResource):
         authorization = Authorization()
         serializer = PrettyJSONSerializer()
         always_return_data = True
-        fields = ['points', 'digest', 'data', 'tracker_date', 'badges', 'course', 'completed', 'scoring', 'metadata', 'badging']
+        fields = ['points', 'digest', 'data', 'tracker_date', 'badges', 'course', 'completed', 'scoring', 'metadata',
+                  'badging']
 
     def hydrate(self, bundle, request=None):
         # remove any id if this is submitted - otherwise it may overwrite existing tracker item
@@ -297,7 +297,8 @@ class TrackerResource(ModelResource):
         # find out the course & activity type from the digest
         try:
             if 'course' in bundle.data:
-                activities = Activity.objects.filter(digest=bundle.data['digest'], section__course__shortname=bundle.data['course'])[:1]
+                activities = Activity.objects.filter(digest=bundle.data['digest'],
+                                                     section__course__shortname=bundle.data['course'])[:1]
             else:
                 activities = Activity.objects.filter(digest=bundle.data['digest'])[:1]
             if activities.count() > 0:
@@ -319,7 +320,8 @@ class TrackerResource(ModelResource):
 
         try:
             if 'course' in bundle.data:
-                media_objs = Media.objects.filter(digest=bundle.data['digest'], course__shortname=bundle.data['course'])[:1]
+                media_objs = Media.objects.filter(digest=bundle.data['digest'],
+                                                  course__shortname=bundle.data['course'])[:1]
             else:
                 media_objs = Media.objects.filter(digest=bundle.data['digest'])[:1]
             if media_objs.count() > 0:
@@ -379,7 +381,8 @@ class TrackerResource(ModelResource):
 
     def patch_list(self, request, **kwargs):
         request = convert_post_to_patch(request)
-        deserialized = self.deserialize(request, request.body, format=request.META.get('CONTENT_TYPE', 'application/json'))
+        deserialized = self.deserialize(request, request.body,
+                                        format=request.META.get('CONTENT_TYPE', 'application/json'))
         for data in deserialized["objects"]:
             data = self.alter_deserialized_detail_data(request, data)
             bundle = self.build_bundle(data=dict_strip_unicode_keys(data))
@@ -388,15 +391,15 @@ class TrackerResource(ModelResource):
             bundle.request.META['HTTP_USER_AGENT'] = request.META.get('HTTP_USER_AGENT', 'unknown')
             self.obj_create(bundle, request=request)
         response_data = {'points': self.dehydrate_points(bundle),
-                         'badges':self.dehydrate_badges(bundle),
-                         'scoring':self.dehydrate_scoring(bundle),
-                         'badging':self.dehydrate_badging(bundle),
-                         'metadata':self.dehydrate_metadata(bundle)}
+                         'badges': self.dehydrate_badges(bundle),
+                         'scoring': self.dehydrate_scoring(bundle),
+                         'badging': self.dehydrate_badging(bundle),
+                         'metadata': self.dehydrate_metadata(bundle)}
         response = HttpResponse(content=json.dumps(response_data), content_type="application/json; charset=utf-8")
         return response
 
-class CourseResource(ModelResource):
 
+class CourseResource(ModelResource):
     class Meta:
         queryset = Course.objects.all()
         resource_name = 'course'
@@ -416,8 +419,9 @@ class CourseResource(ModelResource):
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/download%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('download_detail'), name="api_download_detail"),
-            ]
+            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/download%s$" % (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('download_detail'), name="api_download_detail"),
+        ]
 
     def download_detail(self, request, **kwargs):
         self.is_authenticated(request)
@@ -469,7 +473,7 @@ class CourseResource(ModelResource):
         tracker.user = request.user
         tracker.course = course
         tracker.type = 'download'
-        tracker.data = json.dumps({'version':course.version })
+        tracker.data = json.dumps({'version': course.version})
         tracker.ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
         tracker.agent = request.META.get('HTTP_USER_AGENT', 'unknown')
         tracker.save()
@@ -506,8 +510,10 @@ class CourseResource(ModelResource):
 
         return bundle
 
+
 class CourseTagResource(ModelResource):
     course = fields.ToOneField('oppia.api.resources.CourseResource', 'course', full=True)
+
     class Meta:
         queryset = CourseTag.objects.all()
         allowed_methods = ['get']
@@ -517,8 +523,11 @@ class CourseTagResource(ModelResource):
         authorization = ReadOnlyAuthorization()
         always_return_data = True
 
+
 class ScheduleResource(ModelResource):
-    activityschedule = fields.ToManyField('oppia.api.resources.ActivityScheduleResource', 'activityschedule_set', related_name='schedule', full=True, null=True)
+    activityschedule = fields.ToManyField('oppia.api.resources.ActivityScheduleResource', 'activityschedule_set',
+                                          related_name='schedule', full=True, null=True)
+
     class Meta:
         queryset = Schedule.objects.all()
         resource_name = 'schedule'
@@ -532,6 +541,7 @@ class ScheduleResource(ModelResource):
     def dehydrate(self, bundle):
         bundle.data['version'] = bundle.data['lastupdated_date'].strftime("%Y%m%d%H%M%S")
         return bundle
+
 
 class TagResource(ModelResource):
     count = fields.IntegerField(readonly=True)
@@ -548,14 +558,17 @@ class TagResource(ModelResource):
 
     def get_object_list(self, request):
         if request.user.is_staff:
-            return Tag.objects.filter(courses__isnull=False, coursetag__course__is_archived=False).distinct().order_by('-order_priority', 'name')
+            return Tag.objects.filter(courses__isnull=False, coursetag__course__is_archived=False).distinct().order_by(
+                '-order_priority', 'name')
         else:
-            return Tag.objects.filter(courses__isnull=False, coursetag__course__is_archived=False, coursetag__course__is_draft=False).distinct().order_by('-order_priority', 'name')
+            return Tag.objects.filter(courses__isnull=False, coursetag__course__is_archived=False,
+                                      coursetag__course__is_draft=False).distinct().order_by('-order_priority', 'name')
 
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('tag_detail'), name="api_tag_detail"),
-            ]
+            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)%s$" % (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('tag_detail'), name="api_tag_detail"),
+        ]
 
     def tag_detail(self, request, **kwargs):
         self.is_authenticated(request)
@@ -579,7 +592,9 @@ class TagResource(ModelResource):
             d = cr.full_dehydrate(bundle)
             course_data.append(bundle.data)
 
-        response = HttpResponse(content=json.dumps({'id':pk, 'count':courses.count(), 'courses':course_data, 'name':tag.name}), content_type="application/json; charset=utf-8")
+        response = HttpResponse(
+            content=json.dumps({'id': pk, 'count': courses.count(), 'courses': course_data, 'name': tag.name}),
+            content_type="application/json; charset=utf-8")
         return response
 
     def dehydrate_count(self, bundle):
@@ -607,8 +622,10 @@ class TagResource(ModelResource):
                 del data['objects']
         return data
 
+
 class ActivityScheduleResource(ModelResource):
     schedule = fields.ToOneField('oppia.api.resources.ScheduleResource', 'schedule', related_name='activityschedule')
+
     class Meta:
         queryset = ActivitySchedule.objects.all()
         resource_name = 'activityschedule'
@@ -623,6 +640,7 @@ class ActivityScheduleResource(ModelResource):
         bundle.data['start_date'] = bundle.data['start_date'].strftime("%Y-%m-%d %H:%M:%S")
         bundle.data['end_date'] = bundle.data['end_date'].strftime("%Y-%m-%d %H:%M:%S")
         return bundle
+
 
 class PointsResource(ModelResource):
     class Meta:
@@ -642,6 +660,7 @@ class PointsResource(ModelResource):
         bundle.data['date'] = bundle.data['date'].strftime("%Y-%m-%d %H:%M:%S")
         return bundle
 
+
 class BadgesResource(ModelResource):
     class Meta:
         queryset = Badge.objects.all()
@@ -660,6 +679,7 @@ class BadgesResource(ModelResource):
             prefix = 'http://'
         bundle.data['default_icon'] = prefix + bundle.request.META['SERVER_NAME'] + bundle.data['default_icon']
         return bundle
+
 
 class AwardsResource(ModelResource):
     badge = fields.ForeignKey(BadgesResource, 'badge', full=True, null=True)
@@ -692,7 +712,6 @@ class AwardsResource(ModelResource):
 
 
 class ClientsResource(ModelResource):
-
     class Meta:
         queryset = Client.objects.all()
         allowed_methods = ['post']
@@ -707,10 +726,12 @@ class ClientsResource(ModelResource):
 
     def obj_create(self, bundle, request=None, **kwargs):
         naming_convention = {'id': 'clientServerId', 'name': 'clientName',
-                        'mobile_number': 'clientMobileNumber', 'age': 'clientAge',
-                        'gender': 'clientGender', 'marital_status': 'clientMaritalStatus',
-                        'parity': 'clientParity', 'life_stage': 'clientLifeStage',
-                        'lastmodified_date': 'clientLastModifiedDate', 'user': 'healthWorker'}
+                             'mobile_number': 'clientMobileNumber', 'age': 'clientAge',
+                             'gender': 'clientGender', 'marital_status': 'clientMaritalStatus',
+                             'parity': 'clientParity', 'life_stage': 'clientLifeStage',
+                             'lastmodified_date': 'clientLastModifiedDate', 'user': 'healthWorker',
+                             'youngest_child_age': 'ageYoungestChild', 'husband_name': 'husbandName',
+                             'using_method': 'methodName'}
 
         clients = bundle.data['clients']
 
@@ -730,6 +751,9 @@ class ClientsResource(ModelResource):
                 client_temp.marital_status = client['clientMaritalStatus']
                 client_temp.parity = client['clientParity']
                 client_temp.life_stage = client['clientLifeStage']
+                client_temp.youngest_child_age = client['ageYoungestChild']
+                client_temp.husband_name = client['husbandName']
+                client_temp.using_method = client['methodName']
                 client_temp.save()
                 clients_id_dict[client_temp.id] = client['clientId']
                 bundle.obj = client_temp
@@ -745,6 +769,9 @@ class ClientsResource(ModelResource):
                 client_exist.marital_status = client['clientMaritalStatus']
                 client_exist.parity = client['clientParity']
                 client_exist.life_stage = client['clientLifeStage']
+                client_exist.youngest_child_age = client['ageYoungestChild']
+                client_exist.husband_name = client['husbandName']
+                client_exist.using_method = client['methodName']
                 client_exist.save()
                 bundle.obj = client_exist
         synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
@@ -752,6 +779,7 @@ class ClientsResource(ModelResource):
         clients_return.extend(clients_retrieve_from_server)
         del bundle.data['clients']
         from django.forms.models import model_to_dict
+
         temp = []
         for clien in clients_retrieve_from_server:
             clien = model_to_dict(clien)
@@ -778,12 +806,11 @@ class ClientsResource(ModelResource):
 
 
 class ClientTrackerResource(ModelResource):
-
     class Meta:
         queryset = ClientTracker.objects.all()
         allowed_methods = ['post']
         resource_name = 'clienttracker'
-        fields = ['id', 'user', 'start_time', 'end_time', 'client']
+        fields = ['user', 'start_time', 'end_time', 'client']
         include_resource_uri = False
         serializer = ClientTrackerJSONSerializer()
         authentication = ApiKeyAuthentication()
@@ -791,7 +818,6 @@ class ClientTrackerResource(ModelResource):
         always_return_data = True
 
     def obj_create(self, bundle, request=None, **kwargs):
-
         client_sessions = bundle.data['sessions']
 
         user = User.objects.get(username__exact=bundle.request.user.username)
@@ -808,4 +834,3 @@ class ClientTrackerResource(ModelResource):
 
         bundle.obj = ClientTracker.objects.filter(id__gt=1).first()
         return bundle
-

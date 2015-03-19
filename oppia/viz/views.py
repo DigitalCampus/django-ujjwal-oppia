@@ -43,14 +43,33 @@ def summary_view(request):
 
     # Unique or Repeated Clients
 
-    clients = ClientTracker.objects.filter(end_time__gte=start_date).\
-                        extra(select={'month':'extract( month from date_joined )',
-                                      'year':'extract( year from date_joined )'}).\
-                        values('month', 'year').\
-                        annotate(count=Count('id')).order_by('year', 'month')
+    clients = ClientTracker.objects.filter(end_time__gte=start_date). \
+        extra(select={'month': 'extract( month from end_time )',
+                      'year': 'extract( year from end_time )'}). \
+        values('client__id', 'month', 'year'). \
+        annotate(count=Count('client__id')).order_by('year', 'month')
 
-    previous_clients = User.objects.filter(start_time__lt=start_date).count()
+    previous_clients = ClientTracker.objects.filter(start_time__lt=start_date).count()
 
+    clients_count_dict = {}
+    clients_count_list = []
+    for client in clients:
+        if clients_count_dict.has_key(str(client['year']) + str(client['month'])):
+            if client['count'] == 1:
+                clients_count_dict[str(client['year']) + str(client['month'])]['unique'] += 1
+            else:
+                clients_count_dict[str(client['year']) + str(client['month'])]['repeat'] += 1
+        else:
+            clients_count_dict[str(client['year']) + str(client['month'])] = {}
+            clients_count_dict[str(client['year']) + str(client['month'])]['month'] = client['month']
+            clients_count_dict[str(client['year']) + str(client['month'])]['year'] = client['year']
+            if client['count'] == 1:
+                clients_count_dict[str(client['year']) + str(client['month'])]['unique'] = 1
+                clients_count_dict[str(client['year']) + str(client['month'])]['repeat'] = 0
+            else:
+                clients_count_dict[str(client['year']) + str(client['month'])]['repeat'] = 1
+                clients_count_dict[str(client['year']) + str(client['month'])]['unique'] = 0
+            clients_count_list.append(clients_count_dict[str(client['year']) + str(client['month'])])
 
 
     # Countries
@@ -193,7 +212,9 @@ def summary_view(request):
                                'hot_courses': hot_courses,
                                'tracker_methods': tracker_dict,
                                'films_activity': sorted_film_dict,
-                               'activity_list': activity_list},
+                               'activity_list': activity_list,
+                               'clients_list': clients_count_list,
+                               'previous_clients_list': previous_clients},
                               context_instance=RequestContext(request))
 
 def map_view(request):

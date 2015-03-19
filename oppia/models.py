@@ -702,6 +702,10 @@ class Client(models.Model):
     age = models.IntegerField(blank=False)
     parity = models.CharField(blank=False, choices=CHILDREN_COUNT, max_length=10)
     life_stage = models.CharField(blank=False, choices=LIFE_STAGE, max_length=27)
+    using_method = models.CharField(blank=True, null=True, max_length=100, default='')
+    husband_name = models.CharField(blank=True, max_length=100, default='')
+    youngest_child_age = models.IntegerField(blank=True, default=0)
+
 
 class ClientTracker(models.Model):
     user = models.ForeignKey(User)

@@ -72,9 +72,10 @@
 	                			series: [{areaOpacity:0.2}],
 	                			title: '{% trans 'User Registrations (cumulative)' %}'
 	                			});
-	        
-	        var data3 = new google.visualization.DataTable();
-			data3.addColumn('string', "{% trans 'Country' %}");
+
+
+            var data3 = new google.visualization.DataTable();
+            data3.addColumn('string', "{% trans 'Country' %}");
 			data3.addColumn('number', "{% trans 'Total' %}");
 			
 			data3.addRows( {{ country_activity|length }} );
@@ -300,8 +301,35 @@
 								isStacked: true
 	                			});
 
-	      }
-	</script>
+            var data11 = new google.visualization.DataTable();
+            data11.addColumn('string', 'Month/Year');
+            data11.addColumn('number', 'Unique Clients Counselled');
+            data11.addColumn('number', 'Repeat Clients Counselled');
+
+            data11.addRows({{ clients_list|length }});
+            {% for value in clients_list %}
+                data11.setValue({{ forloop.counter0 }}, 0, '{{ value.month }}-{{ value.year }}');
+                data11.setValue({{ forloop.counter0 }}, 1, {{ value.unique }});
+                data11.setValue({{ forloop.counter0 }}, 2, {{ value.repeat }});
+            {% endfor %}
+
+            var chart11 = new google.visualization.LineChart(document.getElementById('new_unique_counselled_chart_div'));
+            chart11.draw(data11, {    width: '100%',
+                height: 400,
+                vAxis: {minValue: 0},
+                pointSize: 3,
+                chartArea: {left: 45, width: "75%", height: "75%"},
+                backgroundColor: 'transparent',
+                legend: {position: 'right'},
+                series: [
+                    {areaOpacity: 0.2}
+                ],
+                title: '{% trans 'Unique & Repeat Clients Counselled' %}'
+            });
+
+
+        }
+    </script>
 	{% endblock extra_scripts %}
 {% endif %} 
 {% block content %}
@@ -333,6 +361,10 @@
 
 <h3>{% trans 'Films Used for Method' %}</h3>
 <div id="film_mix_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif" alt="{% trans 'graph_generating'%}"/></div>
+
+    <h3>{% trans 'Unique & Repeat Clients Counselled' %}</h3>
+    <div id="new_unique_counselled_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                                 alt="{% trans 'graph_generating' %}"/></div>
 
 
 {% endblock %}
