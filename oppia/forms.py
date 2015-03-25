@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import FieldWithButtons
 from crispy_forms.layout import Button, Layout, Fieldset, ButtonHolder, Submit, Div, HTML, Row
-from models import Client
+from models import Client, User
 
 from oppia.models import Schedule
 
@@ -223,4 +223,20 @@ class DateRangeIntervalForm(forms.Form):
 class ClientForm (forms.ModelForm) :
     
     class Meta :
-        model = Client 
+        model = Client
+
+
+class ClientFilterForm(forms.Form):
+    users = forms.ChoiceField(widget=forms.Select)
+
+    def __init__(self, *args, **kwargs):
+        super(ClientFilterForm, self).__init__(*args, **kwargs)
+        clients = Client.objects.all()
+        distinct_users = set()
+        for client in clients:
+            distinct_users.add(client.user.username)
+        user_choices = [(user, user) for user in distinct_users]
+        self.fields['users'].choices = user_choices
+        self.helper = FormHelper()
+        self.helper.layout = Layout(Row(FieldWithButtons('users', Submit('submit', _(u'Go'),
+                                                                         css_class='btn btn-default')), ))

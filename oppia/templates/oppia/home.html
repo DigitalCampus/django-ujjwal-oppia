@@ -73,7 +73,8 @@
     </div-->
 
     <div>
-        <h3>Clients List</h3>
+        <h3>Clients List &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 15px;"><a
+                href="/clientfilter/">Filter by User</a></span></h3>
 
         <div class="table-responsive">
          <table class="table table-striped">
@@ -84,7 +85,10 @@
                   <th>{% trans 'Age' %}</th>
                   <th>{% trans 'Gender' %}</th>
                   <th>{% trans 'Mobile Number' %}</th>
-                  <th>{% trans 'Parity' %}</th>
+                    <th>{% trans 'Husband Name' %}</th>
+                    <th>{% trans 'Using Method' %}</th>
+                    <th>{% trans 'Youngest Child Age' %}</th>
+                    <th>{% trans 'Parity' %}</th>
                   <th>{% trans 'Life Stage' %}</th>
                 </tr>
               </thead>
@@ -98,6 +102,9 @@
                 <td>{{ client.age }}</td>
                 <td>{{ client.gender }}</td>
                 <td>{{ client.mobile_number }}</td>
+                <td>{{ client.husband_name }}</td>
+                <td>{{ client.using_method }}</td>
+                <td>{{ client.youngest_child_age }}</td>
                 <td>{{ client.parity }}</td>
                 <td>{{ client.life_stage }}</td>
 

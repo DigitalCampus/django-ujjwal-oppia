@@ -9,6 +9,7 @@ import tablib
 from dateutil.relativedelta import relativedelta
 
 from django import forms
+from django.views.generic import FormView
 from django.conf import settings
 from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
@@ -23,7 +24,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
 from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
-from oppia.forms import ActivityScheduleForm, CohortForm
+from oppia.forms import ActivityScheduleForm, CohortForm, ClientFilterForm
 from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client
 from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points 
 from oppia.quiz.models import Quiz, QuizAttempt, QuizAttemptResponse
@@ -713,3 +714,16 @@ def course_feedback_responses(request,course_id,quiz_id):
         tracks = paginator.page(paginator.num_pages)
     nav = get_nav(course,request.user)  
     return render_to_response('oppia/course/feedback-responses.html',{'course': course,'nav': nav, 'quiz':quiz, 'page':attempts}, context_instance=RequestContext(request))
+
+
+def clientfilter_view(request):
+    if request.method == 'POST':
+        form = ClientFilterForm(request.POST)
+        if form.is_valid():
+            user = form.cleaned_data['users']
+            clients = Client.objects.filter(user__username=user)
+            return render(request, 'oppia/clients-filter.html', {'form': form, 'clients': clients})
+    else:
+        form = ClientFilterForm()
+
+    return render(request, 'oppia/clients-filter.html', {'form': form, })

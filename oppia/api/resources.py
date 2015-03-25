@@ -801,7 +801,24 @@ class ClientsResource(ModelResource):
             temp.append(clien)
         # clients_return = json.dumps(temp)
         bundle.data['clients'] = temp
-        bundle.obj = Client.objects.filter(id__gt=1).first()
+        clients = Client.objects.filter(id__gt=1).all()
+        if len(clients) > 0:
+            bundle.obj = clients[0]
+        else:
+            client = Client()
+            client.user = user
+            client.id = 99999
+            client.name = 'tempUser'
+            client.age = 0
+            client.mobile_number = 1234567890
+            client.gender = 'Male'
+            client.marital_status = 'No'
+            client.parity = "2"
+            client.life_stage = "One Child"
+            client.youngest_child_age = 0
+            client.husband_name = None
+            client.using_method = None
+            bundle.obj = client
         return bundle
 
 

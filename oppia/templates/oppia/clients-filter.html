@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load display_functions %}
+{% block content %}
+    <h2>{% trans 'Clients Details' %}</h2>
+
+    {% crispy form %}
+    {% if clients %}
+
+        <h3>Clients List for user: {{ clients.0.user.username }}</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>{% trans 'Client Name' %}</th>
+                    <th>{% trans 'Age' %}</th>
+                    <th>{% trans 'Gender' %}</th>
+                    <th>{% trans 'Mobile Number' %}</th>
+                    <th>{% trans 'Husband Name' %}</th>
+                    <th>{% trans 'Using Method' %}</th>
+                    <th>{% trans 'Youngest Child Age' %}</th>
+                    <th>{% trans 'Parity' %}</th>
+                    <th>{% trans 'Life Stage' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for client in clients %}
+
+                    <tr>
+                        <td>{{ client.name }}</td>
+                        <td>{{ client.age }}</td>
+                        <td>{{ client.gender }}</td>
+                        <td>{{ client.mobile_number }}</td>
+                        <td>{{ client.husband_name }}</td>
+                        <td>{{ client.using_method }}</td>
+                        <td>{{ client.youngest_child_age }}</td>
+                        <td>{{ client.parity }}</td>
+                        <td>{{ client.life_stage }}</td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+{% endblock %}
