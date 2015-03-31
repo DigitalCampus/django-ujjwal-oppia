@@ -25,7 +25,7 @@ from django.utils import timezone
 
 from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
 from oppia.forms import ActivityScheduleForm, CohortForm, ClientFilterForm
-from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client
+from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client, ClientTracker
 from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points 
 from oppia.quiz.models import Quiz, QuizAttempt, QuizAttemptResponse
 
@@ -88,13 +88,22 @@ def home_view(request):
         form = None
     leaderboard = Points.get_leaderboard(10)
     clients = Client.objects.all()
+    clients = Client.objects.all().order_by('id')
+    clientsDict = {}
+    for client in clients:
+        clientsDict[client.id] = [client, []]
+    clientTrackers = ClientTracker.objects.all().order_by('client__id')
+    for tracker in clientTrackers:
+        val = clientsDict[tracker.client_id][1]
+        val.append(tracker)
+
     users = User.objects.all()
     user_set = []
     for user in users:
         user_set.append((user.id, user.username))
     return render_to_response('oppia/home.html',
                               {'form': form,
-                               'clients': clients,
+                               'clients': clientsDict,
                                'recent_activity':activity, 
                                'leaderboard':leaderboard,
                                'user_set': user_set},
@@ -720,10 +729,28 @@ def clientfilter_view(request):
     if request.method == 'POST':
         form = ClientFilterForm(request.POST)
         if form.is_valid():
+            clientsDict = {}
             user = form.cleaned_data['users']
-            clients = Client.objects.filter(user__username=user)
-            return render(request, 'oppia/clients-filter.html', {'form': form, 'clients': clients})
+            clients = Client.objects.filter(user__username=user).order_by('id')
+            for client in clients:
+                clientsDict[client.id] = [client, []]
+            clientTrackers = ClientTracker.objects.filter(user__username=user).order_by('client__id')
+            for tracker in clientTrackers:
+                val = clientsDict[tracker.client_id][1]
+                val.append(tracker)
+            return render(request, 'oppia/clients-filter.html', {'form': form, 'clients': clientsDict, 'usr': user})
     else:
         form = ClientFilterForm()
 
     return render(request, 'oppia/clients-filter.html', {'form': form, })
+
+
+def clientsession_view(request, client):
+    if request.method == 'GET':
+        clientObj = Client.objects.get(id=client)
+        clientTrackers = ClientTracker.objects.filter(client__id=client)
+        session_dict = {}
+        for clint in clientTrackers:
+            diff = clint.end_time - clint.start_time
+            session_dict[clint.id] = [clint, diff]
+    return render(request, 'oppia/client-session.html', {'sessions': session_dict, 'client': clientObj.name})

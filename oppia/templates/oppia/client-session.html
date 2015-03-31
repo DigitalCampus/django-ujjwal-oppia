@@ -1,0 +1,65 @@
+<html>
+{% load i18n %}
+{% load display_functions %}
+
+<head>
+    <title>{% trans 'app_name' %}</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <META name="description" content="OppiaMobile learning"/>
+    <META name="keywords"
+          content="oppia, oppiamobile, oppia-mobile, quiz, assessment, mobile, android, learning, video, media"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="{{ STATIC_URL }}oppia/bootstrap-3.1.1/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <link href="{{ STATIC_URL }}oppia/style.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}oppia/ui-lightness/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}oppia/ui-lightness/jquery-ui.structure.min.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}oppia/ui-lightness/jquery-ui.theme.min.css" rel="stylesheet"/>
+    <link rel="shortcut icon" href="{{ STATIC_URL }}oppia/images/favicon.ico"/>
+    <script src="{{ STATIC_URL }}oppia/js/jquery-1.11.0.min.js"></script>
+    <script src="{{ STATIC_URL }}oppia/ui-lightness/jquery-ui.min.js"></script>
+    {% block extra_styles %}
+    {% endblock extra_styles %}
+
+    {% block extra_scripts %}
+    {% endblock extra_scripts %}
+</head>
+{% block content %}
+
+
+    {% if sessions %}
+
+        <h3>Sessions List for client: {{ client }}</h3>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>{% trans 'Id' %}</th>
+                    <th>{% trans 'Start Date Time' %}</th>
+                    <th>{% trans 'End Date Time' %}</th>
+                    <th>{% trans 'Duration' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for key, session in sessions.items %}
+
+                    <tr>
+                        <td>{{ session.0.client.name }}</td>
+                        <td>{{ session.0.start_time }}</td>
+                        <td>{{ session.0.end_time }}</td>
+                        <td>{{ session.1 }} <b>hrs</b></td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+{% endblock %}
+</html>

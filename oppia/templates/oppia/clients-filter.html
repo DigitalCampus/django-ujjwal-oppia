@@ -2,13 +2,38 @@
 {% load i18n %}
 {% load crispy_forms_tags %}
 {% load display_functions %}
+{% block extra_scripts %}
+    <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+    <script type="text/javascript">
+
+        function windowpop(url, width, height) {
+            var leftPosition, topPosition;
+            //Allow for borders.
+            leftPosition = (window.screen.width / 2) - ((width / 2) + 10);
+            //Allow for title and status bars.
+            topPosition = (window.screen.height / 2) - ((height / 2) + 50);
+            //Open the window.
+            $.ajax({url: url, success: function (result) {
+                $("#client-session").html(result);
+                $("#client-session").dialog({
+                    dialogClass: 'dialogStyle',
+                    height: height,
+                    width: width,
+                    modal: true  });
+            }});
+
+            //window.open(url, "Window2", "status=no,height=" + height + ",width=" + width + ",resizable=yes,left=" + leftPosition + ",top=" + topPosition + ",screenX=" + leftPosition + ",screenY=" + topPosition + ",menubar=no,titlebar=no,toolbar=no,menubar=no,scrollbars=yes,location=no,directories=no");
+            return false;
+        }
+    </script>
+{% endblock extra_scripts %}
 {% block content %}
     <h2>{% trans 'Clients Details' %}</h2>
 
     {% crispy form %}
     {% if clients %}
 
-        <h3>Clients List for user: {{ clients.0.user.username }}</h3>
+        <h3>Clients List for user: {{ usr }}</h3>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
@@ -22,22 +47,29 @@
                     <th>{% trans 'Youngest Child Age' %}</th>
                     <th>{% trans 'Parity' %}</th>
                     <th>{% trans 'Life Stage' %}</th>
+                    <th>{% trans 'Sessions' %}</th>
                 </tr>
                 </thead>
                 <tbody>
 
-                {% for client in clients %}
+                {% for key,client in clients.items %}
 
                     <tr>
-                        <td>{{ client.name }}</td>
-                        <td>{{ client.age }}</td>
-                        <td>{{ client.gender }}</td>
-                        <td>{{ client.mobile_number }}</td>
-                        <td>{{ client.husband_name }}</td>
-                        <td>{{ client.using_method }}</td>
-                        <td>{{ client.youngest_child_age }}</td>
-                        <td>{{ client.parity }}</td>
-                        <td>{{ client.life_stage }}</td>
+                        <td>{{ client.0.name }}</td>
+                        <td>{{ client.0.age }}</td>
+                        <td>{{ client.0.gender }}</td>
+                        <td>{{ client.0.mobile_number }}</td>
+                        <td>{{ client.0.husband_name }}</td>
+                        <td>{{ client.0.using_method }}</td>
+                        <td>{{ client.0.youngest_child_age }}</td>
+                        <td>{{ client.0.parity }}</td>
+                        <td>{{ client.0.life_stage }}</td>
+                        {% if client.1|length > 0 %}
+                            <td><a href="/clientsession/{{ client.0.id }}"
+                                   onclick="return windowpop(this.href, 700, 433)">{{ client.1|length }}</a></td>
+                        {% else %}
+                            <td>{{ client.1|length }}</td>
+                        {% endif %}
 
                     </tr>
                 {% endfor %}
@@ -45,5 +77,7 @@
             </table>
         </div>
     {% endif %}
+    <div id="client-session">
 
+    </div>
 {% endblock %}

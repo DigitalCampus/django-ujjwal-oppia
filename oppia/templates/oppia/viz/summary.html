@@ -394,6 +394,31 @@
     <div id="new_unique_counselled_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                                  alt="{% trans 'graph_generating' %}"/></div>
 
+    <h3>{% trans 'Average time of counselling sessions' %}</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>{% trans 'User' %}</th>
+                <th>{% trans 'Number of clients' %}</th>
+                <th>{% trans 'Average Time Spent' %}</th>
+            </tr>
+            </thead>
+            <tbody>
+
+
+            {% for key,user in sessions.items %}
+
+                <tr>
+                    <td>{{ user.user }}</td>
+                    <td>{{ user.clients|length }}</td>
+                    <td>{{ user.time }}<b> hrs</b></td>
+                </tr>
+
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
 {% endblock %}
 	

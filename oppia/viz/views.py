@@ -241,6 +241,24 @@ def summary_view(request):
         temp['completed'] = values['completed']
         films_final_list.append(temp)
 
+    sessions = ClientTracker.objects.all().order_by('user__id')
+    sessions_dict = {}
+    for session in sessions:
+        time_diff = session.end_time - session.start_time
+        if sessions_dict.has_key(session.user.id):
+            temp = sessions_dict[session.user.id]
+            temp['count'] += 1
+            temp['time'] += time_diff
+            temp['clients'].add(session.client.id)
+        else:
+            temp_client = set([])
+            temp_client.add(session.client.id)
+            sessions_dict[session.user.id] = {'user': session.user.username, 'time': time_diff, 'count': 1,
+                                              'clients': temp_client}
+    for key, value in sessions_dict.items():
+        temp = sessions_dict[key]
+        temp['time'] /= temp['count']
+
     return render_to_response('oppia/viz/summary.html',
                               {'form': form,
                                'user_registrations': user_registrations,
@@ -259,6 +277,7 @@ def summary_view(request):
                                'activity_list': activity_list,
                                'clients_list': clients_count_list,
                                'previous_clients_list': previous_clients,
+                               'sessions': sessions_dict,
                                'films_completed': films_final_list},
                               context_instance=RequestContext(request))
 
