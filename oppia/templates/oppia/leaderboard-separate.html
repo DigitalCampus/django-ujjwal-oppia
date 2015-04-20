@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+
+{% block content %}
+
+    {% if user.is_authenticated %}
+
+        {% include "includes/messages.html" %}
+        <h3>{% trans 'home_leaderboard' %}</h3>
+        {% include "oppia/includes/leaderboard.html" %}
+        <div><a href="{% url 'oppia_leaderboard' %}">{% trans "more..." %}</a></div>
+        <br/><br/>
+        <!--label for="id_user" class="control-label  requiredField"> User</label>
+        <div class="input-group">
+
+
+            <select class="select form-control" id="id_user" name="user">
+
+            </select>
+            <span class="input-group-btn">
+                <input type="submit" name="submit" value="Go" class="btn btn-primary btn btn-default" id="submit-id-submit"> </span>
+
+        </div-->
+
+    {% endif %}
+
+{% endblock %}

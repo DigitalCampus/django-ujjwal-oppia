@@ -130,7 +130,7 @@
                       <td>{{ client.0.parity }}</td>
                       <td>{{ client.0.life_stage }}</td>
                       {% if client.1|length > 0 %}
-                          <td><a href="/clientsession/{{ client.0.id }}"
+                          <td><a style='text-decoration: underline;' href="/clientsession/{{ client.0.id }}"
                                  onclick="return windowpop(this.href, 700, 433)">{{ client.1|length }}</a></td>
                       {% else %}
                           <td>{{ client.1|length }}</td>

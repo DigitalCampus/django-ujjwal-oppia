@@ -88,4 +88,10 @@ urlpatterns = patterns('',
                        url(r'^media/(?P<path>.*)$', 'django.views.static.serve',
                            {'document_root': settings.MEDIA_ROOT}),
 
+                       url(r'^leaderboards/$', 'oppia.views.leaderboards_view', name="leaderboards"),
+
+                       url(r'^clients/$', 'oppia.views.clients_view', name="clients"),
+
+                       url(r'^recent-activity/$', 'oppia.views.recent_activity_view', name="recent-activity"),
+
 )

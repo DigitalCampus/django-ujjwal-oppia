@@ -36,14 +36,37 @@
 <div class="container-fluid">
      {% if user.is_authenticated %}
      <div class="row">
-	        <div class="col-sm-3 col-md-2 sidebar">
-	          
-	          <ul class="nav nav-sidebar">
-	            <li><a href="{% url 'oppia_home' %}">{% trans 'Dashboard' %}</a></li>
-	            <li><a href="{% url 'oppia_course' %}">{% trans 'Courses' %}</a></li>
+         <div class="main-menu col-sm-3 col-md-2 sidebar">
+
+             <ul class="nav nav-sidebar">
+                 <li><a href="{% url 'oppia_home' %}">{% trans 'Dashboard' %}</a>
+                     <ul class="sub-menu">
+                         <li><a href="{% url 'recent-activity' %}">{% trans 'Recent Activity' %}</a></li>
+                         <li><a href="{% url 'leaderboards' %}">{% trans 'Leaderboard' %}</a></li>
+                         <li><a href="{% url 'clients' %}">{% trans 'Clients List' %}</a></li>
+
+                     </ul>
+                 </li>
+                 <li><a href="{% url 'oppia_course' %}">{% trans 'Courses' %}</a></li>
 	            <li><a href="{% url 'oppia_upload' %}">{% trans 'Upload' %}</a></li>
-	          </ul>
-	          {% if nav %}
+                 {% if user.is_staff %}
+                     <li class="nav-spilled nav-stacked">
+                     <a href="{% url 'oppia_viz_summary' %}">{% trans 'Visualisations' %}</a>
+                     <ul class="sub-menu">
+                         <li><a href="{% url 'oppia_viz_user_registrations' %}">{% trans 'User Registrations' %}</a>
+                         </li>
+                         <li><a href="{% url 'oppia_viz_activity_by_country' %}">{% trans 'Activity by country' %}</a>
+                         </li>
+                         <li><a href="{% url 'oppia_viz_course_activity' %}">{% trans 'Course Activity' %}</a></li>
+                         <li><a href="{% url 'oppia_viz_course_downloads' %}">{% trans 'Course Downloads' %}</a></li>
+                         <li><a href="{% url 'oppia_viz_method_mixes' %}">{% trans 'Method Mixes' %}</a></li>
+                         <li><a href="{% url 'oppia_viz_films_for_methods' %}">{% trans 'Films for Method' %}</a></li>
+                         <li><a href="{% url 'oppia_viz_clients' %}">{% trans 'Unique and Repeat Clients' %}</a></li>
+                     </ul>
+                 {% endif %}
+             </ul>
+             </li>
+             {% if nav %}
 	          <ul class="nav nav-sidebar">
 	          	{% for n in nav %}
 	            <li {% if n.class %}class="{{n.class}}"{% endif%}><a href="{{ n.url }}">{{ n.title }}</a></li>

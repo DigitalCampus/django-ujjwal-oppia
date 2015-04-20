@@ -736,8 +736,16 @@ def clientfilter_view(request):
                 clientsDict[client.id] = [client, []]
             clientTrackers = ClientTracker.objects.filter(user__username=user).order_by('client__id')
             for tracker in clientTrackers:
-                val = clientsDict[tracker.client_id][1]
-                val.append(tracker)
+                if clientsDict.has_key(tracker.client_id):
+                    val = clientsDict[tracker.client_id][1]
+                    val.append(tracker)
+                else:
+                    if len(clientsDict) == 1:
+                        for key, value in clientsDict.items():
+                            tracker.client_id = key
+                            tracker.save()
+                        val = clientsDict[tracker.client_id][1]
+                        val.append(tracker)
             return render(request, 'oppia/clients-filter.html', {'form': form, 'clients': clientsDict, 'usr': user})
     else:
         form = ClientFilterForm()
@@ -754,3 +762,162 @@ def clientsession_view(request, client):
             diff = clint.end_time - clint.start_time
             session_dict[clint.id] = [clint, diff]
     return render(request, 'oppia/client-session.html', {'sessions': session_dict, 'client': clientObj.name})
+
+
+def leaderboards_view(request):
+    activity = []
+    if request.user.is_authenticated():
+        start_date = timezone.now() - datetime.timedelta(days=31)
+        end_date = timezone.now()
+        interval = 'days'
+        if request.method == 'POST':
+            form = DateRangeIntervalForm(request.POST)
+            if form.is_valid():
+                start_date = form.cleaned_data.get("start_date")
+                start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+                end_date = form.cleaned_data.get("end_date")
+                end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+                interval = form.cleaned_data.get("interval")
+        else:
+            data = {}
+            data['start_date'] = start_date
+            data['end_date'] = end_date
+            data['interval'] = interval
+            form = DateRangeIntervalForm(initial=data)
+
+        if interval == 'days':
+            no_days = (end_date - start_date).days + 1
+
+            for i in range(0, no_days, +1):
+                temp = start_date + datetime.timedelta(days=i)
+                day = temp.strftime("%d")
+                month = temp.strftime("%m")
+                year = temp.strftime("%Y")
+                count = Tracker.objects.filter(course__isnull=False, course__is_draft=False, user__is_staff=False,
+                                               course__is_archived=False, tracker_date__day=day,
+                                               tracker_date__month=month, tracker_date__year=year).count()
+                activity.append([temp.strftime("%d %b %Y"), count])
+        else:
+            delta = relativedelta(months=+1)
+
+            no_months = 0
+            tmp_date = start_date
+            while tmp_date <= end_date:
+                print tmp_date
+                tmp_date += delta
+                no_months += 1
+
+            for i in range(0, no_months, +1):
+                temp = start_date + relativedelta(months=+i)
+                month = temp.strftime("%m")
+                year = temp.strftime("%Y")
+                count = Tracker.objects.filter(course__isnull=False, course__is_draft=False, user__is_staff=False,
+                                               course__is_archived=False, tracker_date__month=month,
+                                               tracker_date__year=year).count()
+                activity.append([temp.strftime("%b %Y"), count])
+    else:
+        form = None
+    leaderboard = Points.get_leaderboard(10)
+    clients = Client.objects.all()
+    clients = Client.objects.all().order_by('id')
+    clientsDict = {}
+    for client in clients:
+        clientsDict[client.id] = [client, []]
+    clientTrackers = ClientTracker.objects.all().order_by('client__id')
+    for tracker in clientTrackers:
+        val = clientsDict[tracker.client_id][1]
+        val.append(tracker)
+
+    users = User.objects.all()
+    user_set = []
+    for user in users:
+        user_set.append((user.id, user.username))
+    return render_to_response('oppia/leaderboard-separate.html',
+                              {'form': form,
+                               'clients': clientsDict,
+                               'recent_activity': activity,
+                               'leaderboard': leaderboard,
+                               'user_set': user_set},
+                              context_instance=RequestContext(request))
+
+
+def clients_view(request):
+    clients = Client.objects.all().order_by('id')
+    clientsDict = {}
+    for client in clients:
+        clientsDict[client.id] = [client, []]
+    clientTrackers = ClientTracker.objects.all().order_by('client__id')
+    for tracker in clientTrackers:
+        val = clientsDict[tracker.client_id][1]
+        val.append(tracker)
+
+    users = User.objects.all()
+    user_set = []
+    for user in users:
+        user_set.append((user.id, user.username))
+    return render_to_response('oppia/clients-list.html',
+                              {'clients': clientsDict,
+                               'user_set': user_set},
+                              context_instance=RequestContext(request))
+
+
+def recent_activity_view(request):
+    activity = []
+    if request.user.is_authenticated():
+        start_date = timezone.now() - datetime.timedelta(days=31)
+        end_date = timezone.now()
+        interval = 'days'
+        if request.method == 'POST':
+            form = DateRangeIntervalForm(request.POST)
+            if form.is_valid():
+                start_date = form.cleaned_data.get("start_date")
+                start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+                end_date = form.cleaned_data.get("end_date")
+                end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+                interval = form.cleaned_data.get("interval")
+        else:
+            data = {}
+            data['start_date'] = start_date
+            data['end_date'] = end_date
+            data['interval'] = interval
+            form = DateRangeIntervalForm(initial=data)
+
+        if interval == 'days':
+            no_days = (end_date - start_date).days + 1
+
+            for i in range(0, no_days, +1):
+                temp = start_date + datetime.timedelta(days=i)
+                day = temp.strftime("%d")
+                month = temp.strftime("%m")
+                year = temp.strftime("%Y")
+                count = Tracker.objects.filter(course__isnull=False, course__is_draft=False, user__is_staff=False,
+                                               course__is_archived=False, tracker_date__day=day,
+                                               tracker_date__month=month, tracker_date__year=year).count()
+                activity.append([temp.strftime("%d %b %Y"), count])
+        else:
+            delta = relativedelta(months=+1)
+
+            no_months = 0
+            tmp_date = start_date
+            while tmp_date <= end_date:
+                print tmp_date
+                tmp_date += delta
+                no_months += 1
+
+            for i in range(0, no_months, +1):
+                temp = start_date + relativedelta(months=+i)
+                month = temp.strftime("%m")
+                year = temp.strftime("%Y")
+                count = Tracker.objects.filter(course__isnull=False, course__is_draft=False, user__is_staff=False,
+                                               course__is_archived=False, tracker_date__month=month,
+                                               tracker_date__year=year).count()
+                activity.append([temp.strftime("%b %Y"), count])
+    else:
+        form = None
+
+    return render_to_response('oppia/recent-activity.html',
+                              {'form': form,
+                               'recent_activity': activity},
+                              context_instance=RequestContext(request))
+
+

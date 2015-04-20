@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load display_functions %}
+{% load crispy_forms_tags %}
+
+{% block extra_body %}
+    onload="setUpDatePicker();"
+{% endblock extra_body %}
+
+{% if user.is_authenticated %}
+    {% block extra_scripts %}
+        <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+        <script type="text/javascript">
+
+            function setUpDatePicker() {
+                $("#id_start_date").datepicker();
+                $("#id_start_date").datepicker("option", "defaultDate", "-1y");
+                $("#id_start_date").datepicker("option", "dateFormat", "yy-mm-dd");
+            }
+
+            // Load the Visualization API and the piechart package.
+            google.load('visualization', '1.0', {'packages': ['corechart']});
+
+            // Set a callback to run when the Google Visualization API is loaded.
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+
+
+                var data6 = new google.visualization.DataTable();
+                data6.addColumn('string', "{% trans 'Month/Year' %}");
+                data6.addColumn('number', "{% trans 'Total' %}");
+
+                data6.addRows({{ course_activity|length }});
+
+                {% for ca in course_activity %}
+                    data6.setValue({{ forloop.counter0 }}, 0, '{{ ca.month }}-{{ ca.year }}');
+                    data6.setValue({{ forloop.counter0 }}, 1, {{ ca.count }});
+                {% endfor %}
+
+                var chart6 = new google.visualization.AreaChart(document.getElementById('course_activity_chart_div'));
+                chart6.draw(data6, {    width: '100%',
+                    height: 400,
+                    vAxis: {minValue: 0},
+                    pointSize: 3,
+                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    backgroundColor: 'transparent',
+                    legend: 'none',
+                    series: [
+                        {areaOpacity: 0.2}
+                    ],
+                    title: '{% trans 'Course Activity (by month)' %}'
+                });
+
+                var data7 = new google.visualization.DataTable();
+                data7.addColumn('string', "{% trans 'Month/Year' %}");
+                data7.addColumn('number', "{% trans 'Total' %}");
+
+                data7.addRows({{ course_activity|length }});
+
+                count = {{ previous_course_activity }};
+                {% for ca in course_activity %}
+                    count += {{ ca.count }};
+                    data7.setValue({{ forloop.counter0 }}, 0, '{{ ca.month }}-{{ ca.year }}');
+                    data7.setValue({{ forloop.counter0 }}, 1, count);
+                {% endfor %}
+
+                var chart7 = new google.visualization.AreaChart(document.getElementById('course_activity_cumulative_chart_div'));
+                chart7.draw(data7, {    width: '100%',
+                    height: 400,
+                    vAxis: {minValue: 0},
+                    pointSize: 3,
+                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    backgroundColor: 'transparent',
+                    legend: 'none',
+                    series: [
+                        {areaOpacity: 0.2}
+                    ],
+                    title: '{% trans 'Course Activity (cumulative)' %}'
+                });
+
+                var data8 = new google.visualization.DataTable();
+                data8.addColumn('string', "{% trans 'Course' %}");
+                data8.addColumn('number', "{% trans 'Total' %}");
+
+                data8.addRows({{ hot_courses|length }});
+
+                count = 0;
+                {% for hc in hot_courses %}
+                    data8.setValue({{ forloop.counter0 }}, 0, '{{ hc.course }}');
+                    data8.setValue({{ forloop.counter0 }}, 1, {{ hc.hits_percent|floatformat:1 }});
+                {% endfor %}
+
+                var options8 = {
+                    title: '{% trans 'Most Active Courses (in last month)' %}',
+                    width: '50%',
+                    height: 400,
+                    chartArea: {left: 45, top: 40, width: "90%", height: "75%"},
+                    backgroundColor: 'transparent'
+                };
+
+                var chart8 = new google.visualization.PieChart(document.getElementById('activity_by_course_chart_div'));
+                chart8.draw(data8, options8);
+
+            }
+        </script>
+    {% endblock extra_scripts %}
+{% endif %}
+{% block content %}
+
+    <h2>{% trans 'Summary Overview' %}</h2>
+
+    {% crispy form %}
+
+    <h3>{% trans 'Course Activity' %}</h3>
+    <div id="course_activity_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                           alt="{% trans 'graph_generating' %}"/></div>
+    <div id="course_activity_cumulative_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                                      alt="{% trans 'graph_generating' %}"/></div>
+    <div id="activity_by_course_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                              alt="{% trans 'graph_generating' %}"/></div>
+
+
+{% endblock %}
+	
