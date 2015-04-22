@@ -73,7 +73,10 @@ class ClientTrackerJSONSerializer(Serializer):
         if 'objects' in data:
             data['sessions'] = data['objects']
             del data['objects']
-        data = {'sessions': data['sessions']}
+        if data.has_key('sessions'):
+            data = {'sessions': data['sessions']}
+        else:
+            data = {'sessions': []}
 
         return json.dumps(data,
                 sort_keys=True, ensure_ascii=False, indent=self.json_indent)

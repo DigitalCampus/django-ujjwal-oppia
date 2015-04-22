@@ -835,7 +835,9 @@ class ClientTrackerResource(ModelResource):
         always_return_data = True
 
     def obj_create(self, bundle, request=None, **kwargs):
-        client_sessions = bundle.data['sessions']
+        client_sessions = []
+        if bundle.data.has_key('sessions'):
+            client_sessions = bundle.data['sessions']
 
         user = User.objects.get(username__exact=bundle.request.user.username)
         for session in client_sessions:
@@ -848,6 +850,22 @@ class ClientTrackerResource(ModelResource):
             client = Client.objects.get(id=int(session['clientId']))
             client_tracker.client = client
             client_tracker.save()
-
-        bundle.obj = ClientTracker.objects.filter(id__gt=1).first()
+        client = Client()
+        client.user = user
+        client.id = 99999
+        client.name = 'tempUser'
+        client.age = 0
+        client.mobile_number = 1234567890
+        client.gender = 'Male'
+        client.marital_status = 'No'
+        client.parity = "2"
+        client.life_stage = "One Child"
+        client.youngest_child_age = 0
+        client.husband_name = None
+        client.using_method = None
+        tracker = ClientTracker()
+        tracker.client = client
+        tracker.start_time = datetime.datetime.now()
+        tracker.end_time = datetime.datetime.now()
+        bundle.obj = tracker
         return bundle
