@@ -53,7 +53,7 @@ class ClientJSONSerializer(Serializer):
         if 'objects' in data:
             data['clients'] = data['objects']
             del data['objects']
-        else:
+        elif 'clients' not in data:
             data['clients'] = []
         if 'previousSyncTime' not in data:
             data['previousSyncTime'] = 0
