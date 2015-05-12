@@ -732,8 +732,9 @@ class ClientsResource(ModelResource):
                              'lastmodified_date': 'clientLastModifiedDate', 'user': 'healthWorker',
                              'youngest_child_age': 'ageYoungestChild', 'husband_name': 'husbandName',
                              'using_method': 'methodName'}
-
-        clients = bundle.data['clients']
+        clients = []
+        if 'clients' in bundle.data:
+            clients = bundle.data['clients']
 
         user = User.objects.get(username__exact=bundle.request.user.username)
         clients_return = []
@@ -774,10 +775,14 @@ class ClientsResource(ModelResource):
                 client_exist.using_method = client['methodName']
                 client_exist.save()
                 bundle.obj = client_exist
-        synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
-        clients_retrieve_from_server = Client.objects.filter(lastmodified_date__gte=synctime).filter(user=user)
-        clients_return.extend(clients_retrieve_from_server)
-        del bundle.data['clients']
+        synctime = 0
+        clients_retrieve_from_server = []
+        if 'previousSyncTime' in bundle.data:
+            synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
+            clients_retrieve_from_server = Client.objects.filter(lastmodified_date__gte=synctime).filter(user=user)
+            clients_return.extend(clients_retrieve_from_server)
+        if 'clients' in bundle.data:
+            del bundle.data['clients']
         from django.forms.models import model_to_dict
 
         temp = []
