@@ -53,6 +53,10 @@ class ClientJSONSerializer(Serializer):
         if 'objects' in data:
             data['clients'] = data['objects']
             del data['objects']
+        else:
+            data['clients'] = []
+        if 'previousSyncTime' not in data:
+            data['previousSyncTime'] = 0
         data = {'clients': data['clients'], 'previousSyncTime': data['previousSyncTime']}
 
         return json.dumps(data,

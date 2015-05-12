@@ -1,5 +1,6 @@
 # oppia/forms.py
 import datetime
+import json
 import math
 from django import forms
 from django.conf import settings
@@ -10,8 +11,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import FieldWithButtons
-from crispy_forms.layout import Button, Layout, Fieldset, ButtonHolder, Submit, Div, HTML, Row
-from models import Client, User
+from crispy_forms.layout import Button, Layout, Fieldset, ButtonHolder, Submit, Div, HTML, Row, Reset
+from models import Client, Section
 
 from oppia.models import Schedule
 
@@ -227,7 +228,10 @@ class ClientForm (forms.ModelForm) :
 
 
 class ClientFilterForm(forms.Form):
-    users = forms.ChoiceField(widget=forms.Select)
+    users = forms.ChoiceField(widget=forms.Select, required=False)
+    methods = forms.ChoiceField(widget=forms.Select, required=False)
+    parity = forms.ChoiceField(widget=forms.Select, required=False)
+    lifestage = forms.ChoiceField(widget=forms.Select, required=False)
 
     def __init__(self, *args, **kwargs):
         super(ClientFilterForm, self).__init__(*args, **kwargs)
@@ -236,7 +240,27 @@ class ClientFilterForm(forms.Form):
         for client in clients:
             distinct_users.add(client.user.username)
         user_choices = [(user, user) for user in distinct_users]
+        user_choices.insert(0, ('none', 'Select a user'))
         self.fields['users'].choices = user_choices
+        children = list(Client.CHILDREN_COUNT)
+        children.insert(0, ('none', 'Select parity'))
+        self.fields['parity'].choices = children
+        sections = Section.objects.filter(course_id=13)
+        methods = []
+        for sect in sections:
+            name = json.loads(sect.title)
+            name = name['en']
+            methods.append((name, name))
+
+        methods.insert(0, ('none', 'Select a section'))
+        lifestage = list(Client.LIFE_STAGE)
+        lifestage.insert(0, ('none', 'Select life stage'))
+
+        self.fields['methods'].choices = methods
+        self.fields['lifestage'].choices = lifestage
         self.helper = FormHelper()
-        self.helper.layout = Layout(Row(FieldWithButtons('users', Submit('submit', _(u'Go'),
-                                                                         css_class='btn btn-default')), ))
+        self.helper.layout = Layout(Row(Div('parity', 'methods', 'lifestage', css_class='input-group')),
+                                    Row(FieldWithButtons('users', Submit('submit', _(u'Go'),
+                                                                         css_class='btn btn-default'),
+                                                         Reset('Reset', _(u'Reset'),
+                                                               css_class='btn btn-primary')), ))
