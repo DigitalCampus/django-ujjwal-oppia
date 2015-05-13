@@ -12,6 +12,10 @@ from oppia.quiz.api.resources import QuizQuestionResource, ResponseResource, Qui
 
 from tastypie.api import Api
 
+from django.contrib import admin
+
+admin.autodiscover()
+
 v1_api = Api(api_name='v1')
 v1_api.register(TrackerResource())
 v1_api.register(CourseResource())
@@ -35,7 +39,7 @@ v1_api.register(ClientsResource())
 v1_api.register(ClientTrackerResource())
 
 urlpatterns = patterns('',
-
+                       url(r'^admin/', admin.site.urls, name="admin"),
                        url(r'^$', 'oppia.views.home_view', name="oppia_home"),
                        url(r'^server/$', 'oppia.views.server_view', name="oppia_server"),
                        url(r'^leaderboard/$', 'oppia.views.leaderboard_view', name="oppia_leaderboard"),
