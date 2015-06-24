@@ -756,10 +756,12 @@ class ClientsResource(ModelResource):
                 client_temp.youngest_child_age = client['ageYoungestChild']
                 client_temp.husband_name = client['husbandName']
                 client_temp.using_method = client['methodName']
-                client_temp.is_closed = bool(client['clientCloseCase'])
-                client_temp.is_deleted = bool(client['clientDeleteRecord'])
-                if client['adaptedMethodName'] != "":
-                    client_temp.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
+                if 'clientCloseCase' in client.keys():
+                    client_temp.is_closed = bool(client['clientCloseCase'])
+                    client_temp.is_deleted = bool(client['clientDeleteRecord'])
+                if 'adaptedMethodName' in client.keys():
+                    if client['adaptedMethodName'] != "":
+                        client_temp.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
                 client_temp.save()
                 clients_id_dict[client_temp.id] = client['clientId']
                 bundle.obj = client_temp
@@ -778,10 +780,12 @@ class ClientsResource(ModelResource):
                 client_exist.youngest_child_age = client['ageYoungestChild']
                 client_exist.husband_name = client['husbandName']
                 client_exist.using_method = client['methodName']
-                client_exist.is_closed = bool(client['clientCloseCase'])
-                client_exist.is_deleted = bool(client['clientDeleteRecord'])
-                if client['adaptedMethodName'] != "":
-                    client_exist.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
+                if 'clientCloseCase' in client.keys():
+                    client_exist.is_closed = bool(client['clientCloseCase'])
+                    client_exist.is_deleted = bool(client['clientDeleteRecord'])
+                if 'adaptedMethodName' in client.keys():
+                    if client['adaptedMethodName'] != "":
+                        client_exist.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
                 client_exist.save()
                 bundle.obj = client_exist
 
