@@ -43,7 +43,7 @@
                     width: '50%',
                     height: 400,
                     chartArea: {left: 45, top: 40, width: "90%", height: "75%"},
-                    backgroundColor: 'transparent',
+                    backgroundColor: 'transparent'
                 };
 
                 var chart3 = new google.visualization.PieChart(document.getElementById('activity_by_country_chart_div'));
@@ -66,7 +66,7 @@
                     width: '50%',
                     height: 400,
                     chartArea: {left: 45, top: 40, width: "90%", height: "75%"},
-                    backgroundColor: 'transparent',
+                    backgroundColor: 'transparent'
                 };
 
                 var chartLang = new google.visualization.PieChart(document.getElementById('activity_by_language_chart_div'));
@@ -90,5 +90,13 @@
                                                                 alt="{% trans 'graph_generating' %}"/></div>
 
 
+    {% if user.is_staff %}
+        <br/><br/>
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_country_activity_export' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 {% endblock %}
 	

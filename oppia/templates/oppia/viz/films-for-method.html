@@ -44,9 +44,9 @@
                 var chart10 = new google.visualization.ColumnChart(document.getElementById('film_mix_per_method_chart_div'));
                 chart10.draw(data10, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Number of films shown'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "75%", height: "75%"},
+                    chartArea: {left: 65, width: "75%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: {position: 'right'},
                     title: 'Films used for Method',
@@ -74,9 +74,9 @@
                 var chart12 = new google.visualization.ColumnChart(document.getElementById('film_completed_per_method_chart_div'));
                 chart12.draw(data12, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Number of films shown'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "75%", height: "75%"},
+                    chartArea: {left: 65, width: "75%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: {position: 'right'},
                     title: 'Films shown for Method',
@@ -97,12 +97,46 @@
     <h3>{% trans 'Films Used for Method' %}</h3>
     <div id="film_mix_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                                alt="{% trans 'graph_generating' %}"/></div>
-
+    <br/><br/>
     <div id="film_completed_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                                      alt="{% trans 'graph_generating' %}"/></div>
 
 
+    <h3>{% trans 'Films Data' %}</h3>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>{% trans 'Activity' %}</th>
+                <th>{% trans 'Section' %}</th>
+                <th>{% trans 'Films Completed' %}</th>
+                <th>{% trans 'Films Incomplete' %}</th>
+            </tr>
+            </thead>
+            <tbody>
 
+
+            {% for key,value in all_films.items %}
+
+                <tr>
+                    <td>{{ value.activity }}</td>
+                    <td>{{ value.section }}</td>
+                    <td>{{ value.completed }}</td>
+                    <td>{{ value.partial }}</td>
+                </tr>
+
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if user.is_staff %}
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_films_export' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 
 {% endblock %}
 	

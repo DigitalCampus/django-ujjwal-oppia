@@ -41,17 +41,124 @@
                 var chart11 = new google.visualization.ColumnChart(document.getElementById('new_unique_counselled_chart_div'));
                 chart11.draw(data11, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
-                    pointSize: 3,
-                    chartArea: {left: 45, width: "75%", height: "75%"},
+                    vAxis: {minValue: 0, title: 'Clients Counselled Count'},
+                    pointSize: 1,
+                    chartArea: {left: 65, width: "75%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: {position: 'right'},
+                    bar: { groupWidth: '10%' },
                     series: [
-                        {areaOpacity: 0.2}
+                        {areaOpacity: 0.1}
                     ],
-                    title: '{% trans 'Unique & Repeat Clients Counselled' %}'
+                    title: '{% trans 'Unique & Repeat Clients Counselled (by month)' %}'
                 });
 
+
+                var data14 = new google.visualization.DataTable();
+                data14.addColumn('string', "Total");
+                data14.addColumn('number', "{% trans 'Count' %}");
+
+
+                data14.addRows({{ clients_age_range|length }});
+
+                {% for val in clients_age_range %}
+                    {% for key, value in val.items %}
+                        data14.setValue({{ forloop.parentloop.counter0 }}, 0, '{{ key|safe }}');
+                        data14.setValue({{ forloop.parentloop.counter0 }}, 1, {{ value }});
+                    {% endfor %}
+
+                {% endfor %}
+
+                var chart14 = new google.visualization.ColumnChart(document.getElementById('clients_age_range_chart_div'));
+                chart14.draw(data14, {    width: '100%',
+                    height: 400,
+                    vAxis: {minValue: 0, title: 'Clients Count'},
+                    pointSize: 1,
+                    chartArea: {left: "5%", width: "40%", height: "60%"},
+                    backgroundColor: 'transparent',
+                    legend: 'none',
+                    title: 'Clients categorization (By Age Range)',
+                    bar: { groupWidth: '35%' },
+                    series: [
+                        {areaOpacity: 0.1}
+                    ]
+                });
+
+                var data15 = new google.visualization.DataTable();
+                data15.addColumn('string', "Total");
+                data15.addColumn('number', "{% trans 'Marital Status' %}");
+
+
+                data15.addRows({{ clients_marital_status|length }});
+
+                {% for key, val in clients_marital_status.items %}
+                    data15.setValue({{ forloop.counter0 }}, 0, '{{ key|safe }}');
+                    data15.setValue({{ forloop.counter0 }}, 1, {{ val }});
+
+                {% endfor %}
+
+                var chart15 = new google.visualization.ColumnChart(document.getElementById('clients_marital_status_chart_div'));
+                chart15.draw(data15, {    width: '35%',
+                    height: 400,
+                    vAxis: {minValue: 0, title: 'Clients Count'},
+                    pointSize: 2,
+                    chartArea: {left: "5%", width: "40%", height: "60%"},
+                    backgroundColor: 'transparent',
+                    legend: {position: 'bottom'},
+                    title: 'Clients categorization (By Marital Status)',
+                    bar: { groupWidth: '35%' }
+                });
+
+                var data16 = new google.visualization.DataTable();
+                data16.addColumn('string', "Total");
+                data16.addColumn('number', "{% trans 'Using Method' %}");
+
+
+                data16.addRows({{ clients_using_method|length }});
+
+                {% for key, val in clients_using_method.items %}
+                    data16.setValue({{ forloop.counter0 }}, 0, '{{ key|safe }}');
+                    data16.setValue({{ forloop.counter0 }}, 1, {{ val }});
+
+                {% endfor %}
+
+                var chart16 = new google.visualization.ColumnChart(document.getElementById('clients_using_method_chart_div'));
+                chart16.draw(data16, {    width: '25%',
+                    height: 400,
+                    vAxis: {minValue: 0, title: 'Clients Count'},
+                    pointSize: 2,
+                    chartArea: {left: "5%", width: "40%", height: "60%"},
+                    backgroundColor: 'transparent',
+                    legend: {position: 'bottom'},
+                    title: 'Clients categorization (Using Method)',
+                    bar: { groupWidth: '35%' }
+                });
+
+                var data17 = new google.visualization.DataTable();
+                data17.addColumn('string', "Total");
+                data17.addColumn('number', "{% trans 'Life Stage' %}");
+
+
+                data17.addRows({{ clients_life_stage|length }});
+
+                {% for key, val in clients_life_stage.items %}
+                    data17.setValue({{ forloop.counter0 }}, 0, '{{ key|safe }}');
+                    data17.setValue({{ forloop.counter0 }}, 1, {{ val }});
+
+                {% endfor %}
+
+                var chart17 = new google.visualization.ColumnChart(document.getElementById('clients_life_stage_chart_div'));
+                chart17.draw(data17, {    width: '35%',
+                    height: 400,
+                    vAxis: {minValue: 0, title: 'Clients Count'},
+                    //hAxis: {title: 'Life stages'},
+                    pointSize: 2,
+                    chartArea: {left: "5%", width: "40%", height: "60%"},
+                    backgroundColor: 'transparent',
+                    legend: {position: 'bottom'},
+                    title: 'Clients categorization (Life Stage)',
+                    bar: { groupWidth: '35%' }
+                });
 
             }
         </script>
@@ -59,7 +166,7 @@
 {% endif %}
 {% block content %}
 
-    <h2>{% trans 'Summary Overview' %}</h2>
+    <h2>{% trans 'Client    Visits Overview' %}</h2>
 
     {% crispy form %}
 
@@ -92,6 +199,28 @@
             </tbody>
         </table>
     </div>
+
+
+    <h3>{% trans 'Clients Categorization' %}</h3>
+
+    <div id="clients_age_range_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                             alt="{% trans 'graph_generating' %}"/></div>
+
+    <div id="clients_marital_status_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                                  alt="{% trans 'graph_generating' %}"/></div>
+
+    <div id="clients_using_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                                alt="{% trans 'graph_generating' %}"/></div>
+    <div id="clients_life_stage_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+                                                              alt="{% trans 'graph_generating' %}"/></div>
+    <br/><br/>
+    {% if user.is_staff %}
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_client_export_detail' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 
 {% endblock %}
 	
