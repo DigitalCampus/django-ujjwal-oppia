@@ -436,7 +436,7 @@ class CourseResource(ModelResource):
         except Course.DoesNotExist:
             raise Http404()
 
-        file_to_download = course.getAbsPath();
+        file_to_download = course.getAbsPath()
         schedule = course.get_default_schedule()
         has_completed_trackers = Tracker.has_completed_trackers(course, request.user)
         cohort = Cohort.member_now(course, request.user)
@@ -717,11 +717,11 @@ class ClientsResource(ModelResource):
         allowed_methods = ['post']
         resource_name = 'client'
         fields = ['id', 'user', 'created_date', 'lastmodified_date', 'name', 'mobile_number', 'gender',
-                  'marital_stage', 'age', 'parity', 'life_stage']
+                  'marital_stage', 'age', 'parity', 'life_stage', 'adapted_method']
         include_resource_uri = False
-        serializer = ClientJSONSerializer()
         authentication = ApiKeyAuthentication()
         authorization = Authorization()
+        serializer = ClientJSONSerializer()
         always_return_data = True
 
     def obj_create(self, bundle, request=None, **kwargs):
@@ -731,7 +731,8 @@ class ClientsResource(ModelResource):
                              'parity': 'clientParity', 'life_stage': 'clientLifeStage',
                              'lastmodified_date': 'clientLastModifiedDate', 'user': 'healthWorker',
                              'youngest_child_age': 'ageYoungestChild', 'husband_name': 'husbandName',
-                             'using_method': 'methodName'}
+                             'using_method': 'methodName', 'is_closed': 'clientCloseCase',
+                             'is_deleted': 'clientDeleteRecord', 'adapted_method': 'adaptedMethodName'}
         clients = []
         if 'clients' in bundle.data:
             clients = bundle.data['clients']
@@ -755,6 +756,10 @@ class ClientsResource(ModelResource):
                 client_temp.youngest_child_age = client['ageYoungestChild']
                 client_temp.husband_name = client['husbandName']
                 client_temp.using_method = client['methodName']
+                client_temp.is_closed = bool(client['clientCloseCase'])
+                client_temp.is_deleted = bool(client['clientDeleteRecord'])
+                if client['adaptedMethodName'] != "":
+                    client_temp.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
                 client_temp.save()
                 clients_id_dict[client_temp.id] = client['clientId']
                 bundle.obj = client_temp
@@ -773,14 +778,18 @@ class ClientsResource(ModelResource):
                 client_exist.youngest_child_age = client['ageYoungestChild']
                 client_exist.husband_name = client['husbandName']
                 client_exist.using_method = client['methodName']
+                client_exist.is_closed = bool(client['clientCloseCase'])
+                client_exist.is_deleted = bool(client['clientDeleteRecord'])
+                if client['adaptedMethodName'] != "":
+                    client_exist.adapted_method = client['adaptedMethodName'] + "_" + str(datetime.datetime.now())
                 client_exist.save()
                 bundle.obj = client_exist
-        synctime = 0
+
         clients_retrieve_from_server = []
-        if 'previousSyncTime' in bundle.data:
-            synctime = datetime.datetime.fromtimestamp(bundle.data['previousSyncTime'])
-            clients_retrieve_from_server = Client.objects.filter(lastmodified_date__gte=synctime).filter(user=user)
-            clients_return.extend(clients_retrieve_from_server)
+        clients_retrieve_from_server = Client.objects.filter(user=user)
+        clients_retrieve_from_server = clients_retrieve_from_server.filter(is_deleted=False)
+        clients_retrieve_from_server = clients_retrieve_from_server.filter(is_closed=False)
+        clients_return.extend(clients_retrieve_from_server)
         if 'clients' in bundle.data:
             del bundle.data['clients']
         from django.forms.models import model_to_dict
@@ -801,6 +810,8 @@ class ClientsResource(ModelResource):
                             clien['clientId'] = clients_id_dict[_id]
                         else:
                             clien['clientId'] = -1
+                    elif key == 'is_closed' or key == 'is_deleted':
+                        clien[naming_convention[key]] = int(clien.pop(key))
                     else:
                         clien[naming_convention[key]] = clien.pop(key)
             temp.append(clien)
@@ -834,9 +845,9 @@ class ClientTrackerResource(ModelResource):
         resource_name = 'clienttracker'
         fields = ['user', 'start_time', 'end_time', 'client']
         include_resource_uri = False
-        serializer = ClientTrackerJSONSerializer()
         authentication = ApiKeyAuthentication()
         authorization = Authorization()
+        serializer = ClientTrackerJSONSerializer()
         always_return_data = True
 
     def obj_create(self, bundle, request=None, **kwargs):

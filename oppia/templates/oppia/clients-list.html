@@ -32,9 +32,14 @@
                         <th>{% trans 'Mobile Number' %}</th>
                         <th>{% trans 'Husband Name' %}</th>
                         <th>{% trans 'Using Method' %}</th>
+                        <th>{% trans 'Adapted Method' %}</th>
+                        <th>{% trans 'Adapted Method Date' %}</th>
+
                         <th>{% trans 'Youngest Child Age' %}</th>
                         <th>{% trans 'Parity' %}</th>
                         <th>{% trans 'Life Stage' %}</th>
+                        <th>{% trans 'Is Deleted' %}</th>
+                        <th>{% trans 'Is Closed' %}</th>
                         <th>{% trans 'Sessions' %}</th>
                     </tr>
                     </thead>
@@ -51,9 +56,18 @@
                             <td>{{ client.0.mobile_number }}</td>
                             <td>{{ client.0.husband_name }}</td>
                             <td>{{ client.0.using_method }}</td>
+                            {% if client.0.adapted_method != "" %}
+                                <td>{{ client.0.adapted_method }}</td>
+                                <td>{{ client.0.lastmodified_date }}</td>
+                            {% else %}
+                                <td></td>
+                                <td></td>
+                            {% endif %}
                             <td>{{ client.0.youngest_child_age }}</td>
                             <td>{{ client.0.parity }}</td>
                             <td>{{ client.0.life_stage }}</td>
+                            <td>{{ client.0.is_deleted }}</td>
+                            <td>{{ client.0.is_closed }}</td>
                             {% if client.1|length > 0 %}
                                 <td><a style='text-decoration: underline;' href="/clientsession/{{ client.0.id }}"
                                        onclick="return windowpop(this.href, 700, 433)">{{ client.1|length }}</a></td>
@@ -95,5 +109,12 @@
 
     </div>
 
+    {% if user.is_staff %}
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_client_export_detail' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 
 {% endblock %}

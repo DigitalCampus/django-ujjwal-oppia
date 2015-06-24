@@ -9,12 +9,14 @@ from django.shortcuts import render, render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Count, Sum, Q
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 
 from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 
-from oppia.forms import DateDiffForm
-from oppia.models import CourseDownload, Tracker, Course, ClientTracker, Section
+from oppia.forms import DateDiffForm, DateRangeIntervalForm
+from oppia.models import CourseDownload, Tracker, Course, ClientTracker, Section, Client, Activity
 from oppia.viz.models import UserLocationVisualization
 
 
@@ -300,27 +302,60 @@ def user_registrations_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    registrations = []
+
+    start_date = timezone.now() - datetime.timedelta(days=31)
+    end_date = timezone.now()
+    interval = 'days'
     if request.method == 'POST':
-        form = DateDiffForm(request.POST)
+        form = DateRangeIntervalForm(request.POST)
         if form.is_valid():
             start_date = form.cleaned_data.get("start_date")
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = form.cleaned_data.get("end_date")
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            interval = form.cleaned_data.get("interval")
     else:
         data = {}
         data['start_date'] = start_date
-        form = DateDiffForm(initial=data)
+        data['end_date'] = end_date
+        data['interval'] = interval
+        form = DateRangeIntervalForm(initial=data)
 
-    # User registrations
-    user_registrations = User.objects.filter(date_joined__gte=start_date). \
-        extra(select={'month': 'extract( month from date_joined )',
-                      'year': 'extract( year from date_joined )'}). \
-        values('month', 'year'). \
-        annotate(count=Count('id')).order_by('year', 'month')
+    if interval == 'days':
+        no_days = (end_date - start_date).days + 1
+
+        for i in range(0, no_days, +1):
+            temp = start_date + datetime.timedelta(days=i)
+            day = temp.strftime("%d")
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = User.objects.filter(date_joined__year=year, date_joined__month=month,
+                                        date_joined__day=day).count()
+
+            registrations.append([temp.strftime("%d %b %Y"), count])
+    else:
+        delta = relativedelta(months=+1)
+
+        no_months = 0
+        tmp_date = start_date
+        while tmp_date <= end_date:
+            tmp_date += delta
+            no_months += 1
+
+        for i in range(0, no_months, +1):
+            temp = start_date + relativedelta(months=+i)
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = User.objects.filter(date_joined__month=month, date_joined__year=year).count()
+
+            registrations.append([temp.strftime("%b %Y"), count])
 
     previous_user_registrations = User.objects.filter(date_joined__lt=start_date).count()
     return render_to_response('oppia/viz/user-registrations.html',
                               {'form': form,
-                               'user_registrations': user_registrations,
+                               'user_registrations': registrations,
+                               'interval': interval,
                                'previous_user_registrations': previous_user_registrations},
                               context_instance=RequestContext(request))
 
@@ -380,22 +415,55 @@ def course_activity_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    course_activity = []
+
+    start_date = timezone.now() - datetime.timedelta(days=31)
+    end_date = timezone.now()
+    interval = 'days'
     if request.method == 'POST':
-        form = DateDiffForm(request.POST)
+        form = DateRangeIntervalForm(request.POST)
         if form.is_valid():
             start_date = form.cleaned_data.get("start_date")
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = form.cleaned_data.get("end_date")
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            interval = form.cleaned_data.get("interval")
     else:
         data = {}
         data['start_date'] = start_date
-        form = DateDiffForm(initial=data)
+        data['end_date'] = end_date
+        data['interval'] = interval
+        form = DateRangeIntervalForm(initial=data)
 
-    # Course Activity
-    course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=start_date). \
-        extra(select={'month': 'extract( month from submitted_date )',
-                      'year': 'extract( year from submitted_date )'}). \
-        values('month', 'year'). \
-        annotate(count=Count('id')).order_by('year', 'month')
+    if interval == 'days':
+        no_days = (end_date - start_date).days + 1
+
+        for i in range(0, no_days, +1):
+            temp = start_date + datetime.timedelta(days=i)
+            day = temp.strftime("%d")
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = Tracker.objects.filter(user__is_staff=False, submitted_date__year=year,
+                                           submitted_date__month=month, submitted_date__day=day).count()
+
+            course_activity.append([temp.strftime("%d %b %Y"), count])
+    else:
+        delta = relativedelta(months=+1)
+
+        no_months = 0
+        tmp_date = start_date
+        while tmp_date <= end_date:
+            tmp_date += delta
+            no_months += 1
+
+        for i in range(0, no_months, +1):
+            temp = start_date + relativedelta(months=+i)
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = Tracker.objects.filter(user__is_staff=False, submitted_date__year=year,
+                                           submitted_date__month=month).count()
+
+            course_activity.append([temp.strftime("%b %Y"), count])
 
     previous_course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__lt=start_date).count()
 
@@ -423,6 +491,7 @@ def course_activity_view(request):
                               {'form': form,
                                'course_activity': course_activity,
                                'previous_course_activity': previous_course_activity,
+                               'interval': interval,
                                'hot_courses': hot_courses},
                               context_instance=RequestContext(request))
 
@@ -431,22 +500,56 @@ def course_downloads_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    course_downloads = []
+
+    start_date = timezone.now() - datetime.timedelta(days=31)
+    end_date = timezone.now()
+    interval = 'days'
     if request.method == 'POST':
-        form = DateDiffForm(request.POST)
+        form = DateRangeIntervalForm(request.POST)
         if form.is_valid():
             start_date = form.cleaned_data.get("start_date")
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = form.cleaned_data.get("end_date")
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            interval = form.cleaned_data.get("interval")
     else:
         data = {}
         data['start_date'] = start_date
-        form = DateDiffForm(initial=data)
+        data['end_date'] = end_date
+        data['interval'] = interval
+        form = DateRangeIntervalForm(initial=data)
 
-        # Course Downloads
-    course_downloads = CourseDownload.objects.filter(user__is_staff=False, download_date__gte=start_date). \
-        extra(select={'month': 'extract( month from download_date )',
-                      'year': 'extract( year from download_date )'}). \
-        values('month', 'year'). \
-        annotate(count=Count('id')).order_by('year', 'month')
+    if interval == 'days':
+        no_days = (end_date - start_date).days + 1
+
+        for i in range(0, no_days, +1):
+            temp = start_date + datetime.timedelta(days=i)
+            day = temp.strftime("%d")
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = CourseDownload.objects.filter(user__is_staff=False, download_date__year=year,
+                                                  download_date__month=month,
+                                                  download_date__day=day).count()
+
+            course_downloads.append([temp.strftime("%d %b %Y"), count])
+    else:
+        delta = relativedelta(months=+1)
+
+        no_months = 0
+        tmp_date = start_date
+        while tmp_date <= end_date:
+            tmp_date += delta
+            no_months += 1
+
+        for i in range(0, no_months, +1):
+            temp = start_date + relativedelta(months=+i)
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            count = CourseDownload.objects.filter(user__is_staff=False, download_date__month=month,
+                                                  download_date__year=year).count()
+
+            course_downloads.append([temp.strftime("%b %Y"), count])
 
     previous_course_downloads = CourseDownload.objects.filter(user__is_staff=False,
                                                               download_date__lt=start_date).count()
@@ -454,6 +557,7 @@ def course_downloads_view(request):
     return render_to_response('oppia/viz/course-downloads.html',
                               {'form': form,
                                'course_downloads': course_downloads,
+                               'interval': interval,
                                'previous_course_downloads': previous_course_downloads, },
                               context_instance=RequestContext(request))
 
@@ -516,9 +620,12 @@ def films_for_method_view(request):
                                              Q(activity_title__icontains='Entertainment') |
                                              Q(activity_title__icontains='TV')).order_by('section_title')
     films_completed_dict = {}
+    films_all_dict = {}
     for flim in films_completed:
         sec_title = json.loads(flim.section_title)
         sec_title = sec_title['en']
+        act = json.loads(flim.activity_title)
+        act = act['en']
         if films_completed_dict.has_key(sec_title):
             if flim.completed == 0:
                 films_completed_dict[sec_title]['partial'] += 1
@@ -532,6 +639,22 @@ def films_for_method_view(request):
             else:
                 films_completed_dict[sec_title]['partial'] = 0
                 films_completed_dict[sec_title]['completed'] = 1
+        full_title = act + '_' + sec_title
+        if full_title in films_all_dict:
+            if flim.completed == 0:
+                films_all_dict[full_title]['partial'] += 1
+            else:
+                films_all_dict[full_title]['completed'] += 1
+        else:
+            films_all_dict[full_title] = {}
+            films_all_dict[full_title]['section'] = sec_title
+            films_all_dict[full_title]['activity'] = act
+            if flim.completed == 0:
+                films_all_dict[full_title]['partial'] = 1
+                films_all_dict[full_title]['completed'] = 0
+            else:
+                films_all_dict[full_title]['partial'] = 0
+                films_all_dict[full_title]['completed'] = 1
     sorted_sections = sorted(films_completed_dict.keys())
     films_final_list = []
     for f in sorted_sections:
@@ -545,7 +668,8 @@ def films_for_method_view(request):
                               {'form': form,
                                'films_activity': sorted_film_dict,
                                'activity_list': activity_list,
-                               'films_completed': films_final_list},
+                               'films_completed': films_final_list,
+                               'all_films': films_all_dict},
                               context_instance=RequestContext(request))
 
 
@@ -553,48 +677,111 @@ def method_mixes_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
-    if request.method == 'POST':
-        form = DateDiffForm(request.POST)
-        if form.is_valid():
-            start_date = form.cleaned_data.get("start_date")
-    else:
-        data = {}
-        data['start_date'] = start_date
-        form = DateDiffForm(initial=data)
-
-    #method mixes
-    tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__gte=start_date). \
-        extra(select={'month': 'extract( month from submitted_date )',
-                      'year': 'extract( year from submitted_date )'}). \
-        values('month', 'year', 'section_title'). \
-        annotate(count=Count('id')).annotate(acount=Count('section_title')). \
-        order_by('year', 'month', 'section_title')
-
+    tracker_methods = []
     tracker_dict = {}
     tracker_list = []
 
-    for meth in tracker_methods:
-        sec_title = json.loads(meth['section_title'])
-        sec_title = sec_title['en']
-        meth['section_title'] = sec_title
-        key = str(str(meth['month']) + '-' + str(meth['year']))
-        if tracker_dict.has_key(str(meth['month']) + '-' + str(meth['year'])):
-            tracker_dict[key].append(meth)
-        else:
-            tracker_dict[key] = [meth]
-            tracker_list.append(tracker_dict[key])
     sections_list = []
-    if len(tracker_list) > 0:
-        for track in tracker_list[0]:
-            sections_list.append(track['section_title'])
 
-    previous_tracker_methods = Tracker.objects.filter(course_id=13, type='page', submitted_date__lte=start_date).count()
+    trackers = Tracker.objects.filter(course_id=13, type='page').values('section_title'). \
+        annotate(count=Count('section_title')).order_by('section_title')
+    for track in trackers:
+        sec_title = json.loads(track['section_title'])
+        sec_title = sec_title['en']
+        sections_list.append(sec_title)
+
+    start_date = timezone.now() - datetime.timedelta(days=31)
+    end_date = timezone.now()
+    interval = 'days'
+    if request.method == 'POST':
+        form = DateRangeIntervalForm(request.POST)
+        if form.is_valid():
+            start_date = form.cleaned_data.get("start_date")
+            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = form.cleaned_data.get("end_date")
+            end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+            interval = form.cleaned_data.get("interval")
+    else:
+        data = {'start_date': start_date, 'end_date': end_date, 'interval': interval}
+        form = DateRangeIntervalForm(initial=data)
+
+    if interval == 'days':
+        no_days = (end_date - start_date).days + 1
+
+        for i in range(0, no_days, +1):
+            temp = start_date + datetime.timedelta(days=i)
+            day = temp.strftime("%d")
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            trackers = Tracker.objects.filter(course_id=13, type='page', submitted_date__year=year,
+                                              submitted_date__month=month, submitted_date__day=day). \
+                values('section_title').annotate(count=Count('section_title')).order_by('section_title')
+
+            count = trackers.count()
+            for meth in trackers:
+                sec_title = json.loads(meth['section_title'])
+                sec_title = sec_title['en']
+                meth['section_title'] = sec_title
+                key = temp.strftime("%d %b %Y")
+                meth['date'] = key
+                if key in tracker_dict.keys():
+                    tracker_dict[key].append(meth)
+                else:
+                    tracker_dict[key] = [meth]
+                    tracker_list.append(tracker_dict[key])
+            if count == 0:
+                temp_dict = {}
+                key = temp.strftime("%d %b %Y")
+                temp_dict[key] = []
+                for sec in sections_list:
+                    temp_dict[key].append({'count': count, 'section_title': sec, 'date': key})
+                tracker_list.append(temp_dict[key])
+
+            tracker_methods.append([temp.strftime("%d %b %Y"), count])
+    else:
+        delta = relativedelta(months=+1)
+
+        no_months = 0
+        tmp_date = start_date
+        while tmp_date <= end_date:
+            tmp_date += delta
+            no_months += 1
+
+        for i in range(0, no_months, +1):
+            temp = start_date + relativedelta(months=+i)
+            month = temp.strftime("%m")
+            year = temp.strftime("%Y")
+            trackers = Tracker.objects.filter(course_id=13, type='page', submitted_date__year=year,
+                                              submitted_date__month=month).values('section_title') \
+                .annotate(count=Count('section_title')).order_by('section_title')
+            count = trackers.count()
+
+            for meth in trackers:
+                sec_title = json.loads(meth['section_title'])
+                sec_title = sec_title['en']
+                meth['section_title'] = sec_title
+                key = temp.strftime("%d %b %Y")
+                meth['date'] = key
+                if key in tracker_dict.keys():
+                    tracker_dict[key].append(meth)
+                else:
+                    tracker_dict[key] = [meth]
+                    tracker_list.append(tracker_dict[key])
+            if count == 0:
+                temp_dict = {}
+                key = temp.strftime("%d %b %Y")
+                temp_dict[key] = []
+                for sec in sections_list:
+                    temp_dict[key].append({'count': count, 'section_title': sec, 'date': key})
+                tracker_list.append(temp_dict[key])
+
+            tracker_methods.append([temp.strftime("%d %b %Y"), count])
 
     return render_to_response('oppia/viz/method-mixes.html',
                               {'form': form,
                                'tracker_methods': tracker_list,
-                               'sections_list': sections_list},
+                               'sections_list': sections_list,
+                               'interval': interval},
                               context_instance=RequestContext(request))
 
 
@@ -660,10 +847,62 @@ def clients_view(request):
         temp = sessions_dict[key]
         temp['time'] /= temp['count']
 
+    # clients graphs on all filters
+
+    clients_age_range = [{'<20': 0}, {'21-25': 0}, {'26-30': 0}, {'30-40': 0}, {'>40': 0}]
+    clients_life_stage = {'adolescent': 0, 'newlymarried': 0, 'pregnant': 0,
+                          'onechild': 0, 'unwantedpregnancy': 0, 'twoormorechildren': 0}
+    clients_marital_status = {'yes': 0, 'no': 0}
+    clients_using_method = {'yes': 0, 'no': 0}
+
+    all_clients = Client.objects.all()
+
+    for cl in all_clients:
+        #categorizing based on age
+        if cl.age < 20:
+            clients_age_range[0]['<20'] += 1
+        elif 20 < cl.age <= 25:
+            clients_age_range[1]['21-25'] += 1
+        elif 26 <= cl.age < 30:
+            clients_age_range[2]['26-30'] += 1
+        elif 30 < cl.age < 40:
+            clients_age_range[3]['30-40'] += 1
+        else:
+            clients_age_range[4]['>40'] += 1
+
+        #categorizing life stage
+        lstage = cl.life_stage.lower()
+        if lstage == 'adolescent':
+            clients_life_stage['adolescent'] += 1
+        elif lstage == 'newlymarried' or lstage == 'newly married':
+            clients_life_stage['newlymarried'] += 1
+        elif lstage == 'pregnant':
+            clients_life_stage['pregnant'] += 1
+        elif lstage == 'onechild' or lstage == 'one child':
+            clients_life_stage['onechild'] += 1
+        elif lstage == 'unwantedpregnancy' or lstage == 'unwanted pregnancy':
+            clients_life_stage['unwantedpregnancy'] += 1
+        else:
+            clients_life_stage['twoormorechildren'] += 1
+
+        if cl.marital_status.lower() == 'yes':
+            clients_marital_status['yes'] += 1
+        else:
+            clients_marital_status['no'] += 1
+
+        if cl.using_method != None and cl.using_method.lower() == 'yes':
+            clients_using_method['yes'] += 1
+        else:
+            clients_using_method['no'] += 1
+
     return render_to_response('oppia/viz/unique-repeat-clients.html',
                               {'form': form,
                                'clients_list': clients_count_list,
                                'previous_clients_list': previous_clients,
+                               'clients_age_range': clients_age_range,
+                               'clients_life_stage': clients_life_stage,
+                               'clients_marital_status': clients_marital_status,
+                               'clients_using_method': clients_using_method,
                                'sessions': sessions_dict},
                               context_instance=RequestContext(request))
 

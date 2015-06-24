@@ -26,8 +26,9 @@ from django.utils import timezone
 from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
 from oppia.forms import ActivityScheduleForm, CohortForm, ClientFilterForm
 from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client, ClientTracker
-from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points
+from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points, CourseDownload
 from oppia.quiz.models import Quiz, QuizAttempt, QuizAttemptResponse
+from oppia.viz.models import UserLocationVisualization
 
 from uploader import handle_uploaded_file
 
@@ -97,6 +98,10 @@ def home_view(request):
     clients = Client.objects.all().order_by('id')
     clientsDict = {}
     for client in clients:
+        if client.adapted_method != "":
+            splits = client.adapted_method.split("_")
+            client.adapted_method = splits[0]
+            client.lastmodified_date = splits[1].split(" ")[0]
         clientsDict[client.id] = [client, []]
     clientTrackers = ClientTracker.objects.all().order_by('client__id')
     for tracker in clientTrackers:
@@ -783,7 +788,8 @@ def clientfilter_view(request):
             lifestage = form.cleaned_data['lifestage']
             parity = form.cleaned_data['parity']
             methods = form.cleaned_data['methods']
-
+            is_deleted = form.cleaned_data['is_deleted']
+            is_closed = form.cleaned_data['is_closed']
             clients = Client.objects.all()
             if user != 'none':
                 clients = clients.filter(user__username=user).order_by('id')
@@ -793,8 +799,16 @@ def clientfilter_view(request):
                 clients = clients.filter(parity=parity)
             if methods != 'none':
                 clients = clients.filter(using_method=methods)
+            if is_closed:
+                clients = clients.filter(is_closed=True)
+            if is_deleted:
+                clients = clients.filter(is_deleted=True)
 
             for client in clients:
+                if client.adapted_method != "":
+                    splits = client.adapted_method.split("_")
+                    client.adapted_method = splits[0]
+                    client.lastmodified_date = splits[1].split(" ")[0]
                 clientsDict[client.id] = [client, []]
             clientTrackers = ClientTracker.objects.all().order_by('client__id')
             for tracker in clientTrackers:
@@ -880,10 +894,13 @@ def leaderboards_view(request):
     else:
         form = None
     leaderboard = Points.get_leaderboard(10)
-    clients = Client.objects.all()
     clients = Client.objects.all().order_by('id')
     clientsDict = {}
     for client in clients:
+        if client.adapted_method != "":
+            splits = client.adapted_method.split("_")
+            client.adapted_method = splits[0]
+            client.lastmodified_date = splits[1].split(" ")[0]
         clientsDict[client.id] = [client, []]
     clientTrackers = ClientTracker.objects.all().order_by('client__id')
     for tracker in clientTrackers:
@@ -907,6 +924,10 @@ def clients_view(request):
     clients = Client.objects.all().order_by('id')
     clientsDict = {}
     for client in clients:
+        if client.adapted_method != "":
+            splits = client.adapted_method.split("_")
+            client.adapted_method = splits[0]
+            client.lastmodified_date = splits[1].split(" ")[0]
         clientsDict[client.id] = [client, []]
     clientTrackers = ClientTracker.objects.all().order_by('client__id')
     for tracker in clientTrackers:
@@ -982,4 +1003,142 @@ def recent_activity_view(request):
                                'recent_activity': activity},
                               context_instance=RequestContext(request))
 
+
+def clients_export(request):
+    headers = (
+        'UserId', 'Name', 'Mobile', 'Gender', 'Marital Status', 'Age', 'Parity', 'Life stage', 'Using Method',
+        'Husband Name', 'Youngest Child Age', 'Created Date')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    clients = Client.objects.all()
+    for c in clients:
+        try:
+            data.append((c.user_id, c.name, c.mobile_number, c.gender, c.marital_status, c.age, c.parity, c.life_stage,
+                         c.using_method, c.husband_name, c.youngest_child_age,
+                         c.created_date.strftime('%Y-%m-%d %H:%M:%S')))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=clients_export.xls"
+
+    return response
+
+
+def course_downloads_export(request):
+    headers = (
+        'UserId', 'Course', 'Download Date', 'Course Version', 'IP', 'Agent')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    downloads = CourseDownload.objects.all()
+    for c in downloads:
+        try:
+            data.append((c.user_id, c.course_id, c.download_date.strftime('%Y-%m-%d %H:%M:%S'), c.course_version, c.ip,
+                         c.agent))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=course_downloads_export.xls"
+
+    return response
+
+
+def course_activity_export(request):
+    headers = (
+        'UserId', 'Submitted Date', 'IP', 'Digest', 'Data', 'Course', 'Activity Title', 'Section Title', 'Type',
+        'Completed', 'Time taken', 'Lang')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    activities = Tracker.objects.all()
+    for a in activities:
+        try:
+            data.append((a.user_id, a.submitted_date.strftime('%Y-%m-%d %H:%M:%S'), a.ip, a.agent, a.data, a.course_id,
+                         a.activity_title, a.section_title, a.type, a.completed, a.time_taken, a.lang))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=course_activity_export.xls"
+
+    return response
+
+
+def user_registrations_export(request):
+    headers = ('User Name', 'First Name', 'Last Name', 'Email', 'Is Active', 'Date Joined')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    users = User.objects.all()
+    for u in users:
+        try:
+            data.append((u.username, u.first_name, u.last_name, u.email, u.is_active,
+                         u.date_joined.strftime('%Y-%m-%d %H:%M:%S')))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=user_registrations_export.xls"
+
+    return response
+
+
+def country_activity_export(request):
+    headers = ('Country Name', 'Country Code', 'Region', 'Latitude', 'Longitude', 'Hits')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    usersViz = UserLocationVisualization.objects.all()
+    for u in usersViz:
+        try:
+            data.append((u.country_name, u.country_code, u.region, u.lat, u.lng, u.hits))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=country_activity_export.xls"
+
+    return response
+
+
+def method_mixes_export(request):
+    headers = (
+        'UserId', 'Submitted Date', 'IP', 'Digest', 'Data', 'Course', 'Activity Title', 'Section Title', 'Type',
+        'Completed', 'Time taken', 'Lang')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    activities = Tracker.objects.filter(course_id=13, type='page')
+    for a in activities:
+        try:
+            data.append((a.user_id, a.submitted_date.strftime('%Y-%m-%d %H:%M:%S'), a.ip, a.agent, a.data, a.course_id,
+                         a.activity_title, a.section_title, a.type, a.completed, a.time_taken, a.lang))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=method_mixes_export.xls"
+
+    return response
+
+
+def films_export(request):
+    headers = (
+        'UserId', 'Submitted Date', 'IP', 'Digest', 'Data', 'Course', 'Activity Title', 'Section Title', 'Type',
+        'Completed', 'Time taken', 'Lang')
+    data = []
+    data = tablib.Dataset(*data, headers=headers)
+    activities = Tracker.objects.filter(Q(course_id=13), Q(type='page'),
+                                        Q(activity_title__icontains='Doctor Speaks') |
+                                        Q(activity_title__icontains='Real') |
+                                        Q(activity_title__icontains='Entertainment') |
+                                        Q(activity_title__icontains='TV'))
+    for a in activities:
+        try:
+            data.append((a.user_id, a.submitted_date.strftime('%Y-%m-%d %H:%M:%S'), a.ip, a.agent, a.data, a.course_id,
+                         a.activity_title, a.section_title, a.type, a.completed, a.time_taken, a.lang))
+        except ValueError:
+            pass
+
+    response = HttpResponse(data.xls, content_type='application/vnd.ms-excel;charset=utf-8')
+    response['Content-Disposition'] = "attachment; filename=films_export.xls"
+
+    return response
 

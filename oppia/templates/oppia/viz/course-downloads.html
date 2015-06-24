@@ -12,11 +12,7 @@
         <script type='text/javascript' src='https://www.google.com/jsapi'></script>
         <script type="text/javascript">
 
-            function setUpDatePicker() {
-                $("#id_start_date").datepicker();
-                $("#id_start_date").datepicker("option", "defaultDate", "-1y");
-                $("#id_start_date").datepicker("option", "dateFormat", "yy-mm-dd");
-            }
+            {% include "oppia/includes/init-date-picker-js.html" %}
 
             // Load the Visualization API and the piechart package.
             google.load('visualization', '1.0', {'packages': ['corechart']});
@@ -31,24 +27,24 @@
 
                 data4.addRows({{ course_downloads|length }});
 
-                {% for cd in course_downloads %}
-                    data4.setValue({{ forloop.counter0 }}, 0, '{{ cd.month }}-{{ cd.year }}');
-                    data4.setValue({{ forloop.counter0 }}, 1, {{ cd.count }});
+                {% for cd,count in course_downloads %}
+                    data4.setValue({{ forloop.counter0 }}, 0, '{{ cd }}');
+                    data4.setValue({{ forloop.counter0 }}, 1, {{ count }});
                 {% endfor %}
 
 
                 var chart4 = new google.visualization.AreaChart(document.getElementById('course_downloads_chart_div'));
                 chart4.draw(data4, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Number of Course Downloads'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    chartArea: {left: 75, width: "90%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
                         {areaOpacity: 0.2}
                     ],
-                    title: '{% trans 'Course Downloads (by month)' %}'
+                    title: '{% trans 'Course Downloads (by ' %}{{ interval }})'
                 });
 
                 var data5 = new google.visualization.DataTable();
@@ -58,18 +54,18 @@
                 data5.addRows({{ course_downloads|length }});
 
                 count = {{ previous_course_downloads }};
-                {% for cd in course_downloads %}
-                    count += {{ cd.count }};
-                    data5.setValue({{ forloop.counter0 }}, 0, '{{ cd.month }}-{{ cd.year }}');
+                {% for cd,count in course_downloads %}
+                    count += {{ count }};
+                    data5.setValue({{ forloop.counter0 }}, 0, '{{ cd }}');
                     data5.setValue({{ forloop.counter0 }}, 1, count);
                 {% endfor %}
 
                 var chart5 = new google.visualization.AreaChart(document.getElementById('course_downloads_cumulative_chart_div'));
                 chart5.draw(data5, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Number of Course Downloads'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    chartArea: {left: 75, width: "90%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
@@ -92,9 +88,18 @@
     <h3>{% trans 'Course Downloads' %}</h3>
     <div id="course_downloads_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                             alt="{% trans 'graph_generating' %}"/></div>
+    <br/><br/>
     <div id="course_downloads_cumulative_chart_div" class="graph"><img
             src="{{ STATIC_URL }}oppia/images/ajax-loader.gif" alt="{% trans 'graph_generating' %}"/></div>
 
+    {% if user.is_staff %}
+        <br/><br/>
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_course_downloads_export' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 
 {% endblock %}
 	

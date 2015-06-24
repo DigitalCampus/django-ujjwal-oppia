@@ -12,11 +12,7 @@
         <script type='text/javascript' src='https://www.google.com/jsapi'></script>
         <script type="text/javascript">
 
-            function setUpDatePicker() {
-                $("#id_start_date").datepicker();
-                $("#id_start_date").datepicker("option", "defaultDate", "-1y");
-                $("#id_start_date").datepicker("option", "dateFormat", "yy-mm-dd");
-            }
+            {% include "oppia/includes/init-date-picker-js.html" %}
 
             // Load the Visualization API and the piechart package.
             google.load('visualization', '1.0', {'packages': ['corechart']});
@@ -32,23 +28,23 @@
 
                 data6.addRows({{ course_activity|length }});
 
-                {% for ca in course_activity %}
-                    data6.setValue({{ forloop.counter0 }}, 0, '{{ ca.month }}-{{ ca.year }}');
-                    data6.setValue({{ forloop.counter0 }}, 1, {{ ca.count }});
+                {% for ca,count in course_activity %}
+                    data6.setValue({{ forloop.counter0 }}, 0, '{{ ca }}');
+                    data6.setValue({{ forloop.counter0 }}, 1, {{ count }});
                 {% endfor %}
 
                 var chart6 = new google.visualization.AreaChart(document.getElementById('course_activity_chart_div'));
                 chart6.draw(data6, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Course Activity Count'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    chartArea: {left: 65, width: "90%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
                         {areaOpacity: 0.2}
                     ],
-                    title: '{% trans 'Course Activity (by month)' %}'
+                    title: '{% trans 'Course Activity (by ' %}{{ interval }})'
                 });
 
                 var data7 = new google.visualization.DataTable();
@@ -58,18 +54,18 @@
                 data7.addRows({{ course_activity|length }});
 
                 count = {{ previous_course_activity }};
-                {% for ca in course_activity %}
-                    count += {{ ca.count }};
-                    data7.setValue({{ forloop.counter0 }}, 0, '{{ ca.month }}-{{ ca.year }}');
+                {% for ca,count in course_activity %}
+                    count += {{ count }};
+                    data7.setValue({{ forloop.counter0 }}, 0, '{{ ca }}');
                     data7.setValue({{ forloop.counter0 }}, 1, count);
                 {% endfor %}
 
                 var chart7 = new google.visualization.AreaChart(document.getElementById('course_activity_cumulative_chart_div'));
                 chart7.draw(data7, {    width: '100%',
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Course Activity Count'},
                     pointSize: 3,
-                    chartArea: {left: 45, width: "90%", height: "75%"},
+                    chartArea: {left: 65, width: "90%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
@@ -94,7 +90,7 @@
                     title: '{% trans 'Most Active Courses (in last month)' %}',
                     width: '50%',
                     height: 400,
-                    chartArea: {left: 45, top: 40, width: "90%", height: "75%"},
+                    chartArea: {left: 65, top: 40, width: "90%", height: "75%"},
                     backgroundColor: 'transparent'
                 };
 
@@ -114,11 +110,21 @@
     <h3>{% trans 'Course Activity' %}</h3>
     <div id="course_activity_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                            alt="{% trans 'graph_generating' %}"/></div>
+    <br/><br/>
     <div id="course_activity_cumulative_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                                       alt="{% trans 'graph_generating' %}"/></div>
+    <br/><br/>
     <div id="activity_by_course_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                               alt="{% trans 'graph_generating' %}"/></div>
 
 
+    {% if user.is_staff %}
+        <br/><br/>
+        <div class="export">
+            {% trans 'Export to:' %}
+            <a href="{% url 'oppia_course_activity_export' %}">{% trans 'Excel' %}</a>
+
+        </div>
+    {% endif %}
 {% endblock %}
 	

@@ -107,6 +107,8 @@
                   <th>{% trans 'Mobile Number' %}</th>
                     <th>{% trans 'Husband Name' %}</th>
                     <th>{% trans 'Using Method' %}</th>
+                    <th>{% trans 'Adapted Method' %}</th>
+                    <th>{% trans 'Adapted Method Date' %}</th>
                     <th>{% trans 'Youngest Child Age' %}</th>
                     <th>{% trans 'Parity' %}</th>
                   <th>{% trans 'Life Stage' %}</th>
@@ -126,6 +128,13 @@
                       <td>{{ client.0.mobile_number }}</td>
                       <td>{{ client.0.husband_name }}</td>
                       <td>{{ client.0.using_method }}</td>
+                      {% if client.0.adapted_method != "" %}
+                          <td>{{ client.0.adapted_method }}</td>
+                          <td>{{ client.0.lastmodified_date }}</td>
+                      {% else %}
+                          <td></td>
+                          <td></td>
+                      {% endif %}
                       <td>{{ client.0.youngest_child_age }}</td>
                       <td>{{ client.0.parity }}</td>
                       <td>{{ client.0.life_stage }}</td>
