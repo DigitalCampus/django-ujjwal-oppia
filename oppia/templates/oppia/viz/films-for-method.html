@@ -12,11 +12,13 @@
         <script type='text/javascript' src='https://www.google.com/jsapi'></script>
         <script type="text/javascript">
 
-            function setUpDatePicker() {
-                $("#id_start_date").datepicker();
-                $("#id_start_date").datepicker("option", "defaultDate", "-1y");
-                $("#id_start_date").datepicker("option", "dateFormat", "yy-mm-dd");
-            }
+            {#            function setUpDatePicker() {#}
+            {#                $("#id_start_date").datepicker();#}
+            {#                $("#id_start_date").datepicker("option", "defaultDate", "-1y");#}
+            {#                $("#id_start_date").datepicker("option", "dateFormat", "yy-mm-dd");#}
+            {#            }#}
+
+            {% include "oppia/includes/init-date-picker-js.html" %}
 
             // Load the Visualization API and the piechart package.
             google.load('visualization', '1.0', {'packages': ['corechart']});
@@ -28,32 +30,59 @@
 
                 var data10 = new google.visualization.DataTable();
                 data10.addColumn('string', "Film Category");
-                {% for val in activity_list %}
-                    data10.addColumn('number', "{{ val }}");
-                {% endfor %}
-
-                data10.addRows({{ films_activity|length }});
-
-                {% for key, value in films_activity.items %}
-                    data10.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
-                    {% for val in value %}
-                        data10.setValue({{ forloop.parentloop.counter0 }}, {{ forloop.counter }}, {{ val.1 }});
+                {% if activity_list|length > 0 %}
+                    {% for val in activity_list %}
+                        data10.addColumn('number', "{{ val }}");
                     {% endfor %}
-                {% endfor %}
 
-                var chart10 = new google.visualization.ColumnChart(document.getElementById('film_mix_per_method_chart_div'));
-                chart10.draw(data10, {    width: '100%',
-                    height: 400,
-                    vAxis: {minValue: 0, title: 'Number of films shown'},
-                    pointSize: 3,
-                    chartArea: {left: 65, width: "75%", height: "75%"},
-                    backgroundColor: 'transparent',
-                    legend: {position: 'right'},
-                    title: 'Films used for Method',
-                    bar: { groupWidth: '50%' },
-                    animation: {startup: 'true'},
-                    isStacked: true
-                });
+                    data10.addRows({{ films_activity|length }});
+
+                    {% for key, value in films_activity.items %}
+                        data10.setValue({{ forloop.counter0 }}, 0, '{{ key }}');
+                        {% for val in value %}
+                            data10.setValue({{ forloop.parentloop.counter0 }}, {{ forloop.counter }}, {{ val.1 }});
+                        {% endfor %}
+                    {% endfor %}
+
+                    var chart10 = new google.visualization.ColumnChart(document.getElementById('film_mix_per_method_chart_div'));
+                    chart10.draw(data10, {    width: '100%',
+                        height: 400,
+                        vAxis: {minValue: 0, title: 'Number of films shown'},
+                        hAxis: {title: 'Methods'},
+                        pointSize: 3,
+                        chartArea: {left: 65, width: "75%", height: "65%"},
+                        backgroundColor: 'transparent',
+                        legend: {position: 'right'},
+                        title: 'Films used for Method',
+                        bar: { groupWidth: '50%' },
+                        animation: {startup: 'true'},
+                        isStacked: true
+                    });
+
+                {% else %}
+                    document.getElementById('film_mix_per_method_chart_div').innerHTML += '<p>No data to plot films graph</p>';
+                    {#                    data10.addColumn('number', '');#}
+                    {#                    data10.addRows(0);#}
+                    {##}
+                    {##}
+                    {#                    var chart10 = new google.visualization.ColumnChart(document.getElementById('film_mix_per_method_chart_div'));#}
+                    {#                    chart10.draw(data10, {    width: '100%',#}
+                    {#                        height: 400,#}
+                    {#                        vAxis: {minValue: 0, title: 'Number of films shown'},#}
+                    {#                        pointSize: 3,#}
+                    {#                        chartArea: {left: 65, width: "75%", height: "75%"},#}
+                    {#                        backgroundColor: 'transparent',#}
+                    {#                        legend: 'none',#}
+                    {#                        title: 'Films used for Method',#}
+                    {#                        bar: { groupWidth: '50%' },#}
+                    {#                        animation: {startup: 'true'},#}
+                    {#                        isStacked: true#}
+                    {#                    });#}
+                {% endif %}
+
+
+
+
 
                 var data12 = new google.visualization.DataTable();
                 data12.addColumn('string', "Film Category");
@@ -75,8 +104,9 @@
                 chart12.draw(data12, {    width: '100%',
                     height: 400,
                     vAxis: {minValue: 0, title: 'Number of films shown'},
+                    hAxis: {title: 'Methods'},
                     pointSize: 3,
-                    chartArea: {left: 65, width: "75%", height: "75%"},
+                    chartArea: {left: 65, width: "75%", height: "65%"},
                     backgroundColor: 'transparent',
                     legend: {position: 'right'},
                     title: 'Films shown for Method',
@@ -92,11 +122,12 @@
 {% endif %}
 {% block content %}
 
-    <h2>{% trans 'Summary Overview' %}</h2>
+    <h2>{% trans 'Films Overview' %}</h2>
 
     <h3>{% trans 'Films Used for Method' %}</h3>
-    <div id="film_mix_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
-                                                               alt="{% trans 'graph_generating' %}"/></div>
+    <div id="film_mix_per_method_chart_div" class="graph">{% if activity_list|length > 0 %}
+        <img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
+             alt="{% trans 'graph_generating' %}"/>{% endif %}</div>
     <br/><br/>
     <div id="film_completed_per_method_chart_div" class="graph"><img src="{{ STATIC_URL }}oppia/images/ajax-loader.gif"
                                                                      alt="{% trans 'graph_generating' %}"/></div>

@@ -4,13 +4,34 @@
 {% load crispy_forms_tags %}
 
 {% if user.is_authenticated %}
-    {% block extra_body %}
-        onload="setUpDatePicker();"
-    {% endblock extra_body %}
+    {#    {% block extra_body %}#}
+    {#        onload="setUpDatePicker();"#}
+    {#    {% endblock extra_body %}#}
 
     {% block extra_scripts %}
         <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+        <script type="text/javascript">
 
+            function windowpop(url, width, height) {
+                var leftPosition, topPosition;
+                //Allow for borders.
+                leftPosition = (window.screen.width / 2) - ((width / 2) + 10);
+                //Allow for title and status bars.
+                topPosition = (window.screen.height / 2) - ((height / 2) + 50);
+                //Open the window.
+                $.ajax({url: url, success: function (result) {
+                    $("#client-session").html(result);
+                    $("#client-session").dialog({
+                        dialogClass: 'dialogStyle',
+                        height: height,
+                        width: width,
+                        modal: true  });
+                }});
+
+                //window.open(url, "Window2", "status=no,height=" + height + ",width=" + width + ",resizable=yes,left=" + leftPosition + ",top=" + topPosition + ",screenX=" + leftPosition + ",screenY=" + topPosition + ",menubar=no,titlebar=no,toolbar=no,menubar=no,scrollbars=yes,location=no,directories=no");
+                return false;
+            }
+        </script>
     {% endblock extra_scripts %}
 {% endif %}
 {% block content %}
@@ -19,7 +40,7 @@
 
         <div>
             <h3>Clients List &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 15px;"><a
-                    href="/clientfilter/">Filter by User</a></span></h3>
+                    href="/clientfilter/">Filter List</a></span></h3>
 
             <div class="table-responsive">
                 <table class="table table-striped">
@@ -32,14 +53,12 @@
                         <th>{% trans 'Mobile Number' %}</th>
                         <th>{% trans 'Husband Name' %}</th>
                         <th>{% trans 'Using Method' %}</th>
-                        <th>{% trans 'Adapted Method' %}</th>
-                        <th>{% trans 'Adapted Method Date' %}</th>
+                        <th>{% trans 'Adopted Method' %}</th>
+                        <th>{% trans 'Adopted Method Date' %}</th>
 
                         <th>{% trans 'Youngest Child Age' %}</th>
                         <th>{% trans 'Parity' %}</th>
                         <th>{% trans 'Life Stage' %}</th>
-                        <th>{% trans 'Is Deleted' %}</th>
-                        <th>{% trans 'Is Closed' %}</th>
                         <th>{% trans 'Sessions' %}</th>
                     </tr>
                     </thead>
@@ -66,8 +85,6 @@
                             <td>{{ client.0.youngest_child_age }}</td>
                             <td>{{ client.0.parity }}</td>
                             <td>{{ client.0.life_stage }}</td>
-                            <td>{{ client.0.is_deleted }}</td>
-                            <td>{{ client.0.is_closed }}</td>
                             {% if client.1|length > 0 %}
                                 <td><a style='text-decoration: underline;' href="/clientsession/{{ client.0.id }}"
                                        onclick="return windowpop(this.href, 700, 433)">{{ client.1|length }}</a></td>

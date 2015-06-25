@@ -46,7 +46,7 @@ class UploadCourseStep1Form(forms.Form):
             size = int(math.floor(settings.OPPIA_MAX_UPLOAD_SIZE / 1024 / 1024))
             raise forms.ValidationError(_(
                 "Your file is larger than the maximum allowed (%(size)d Mb). You may want to check your course for large includes, such as images etc.") % {
-                                        'size': size, })
+                                            'size': size, })
 
         if file is not None and file.content_type != 'application/zip' and file.content_type != 'application/x-zip-compressed':
             raise forms.ValidationError(_("You may only upload a zip file"))
@@ -241,8 +241,8 @@ class ClientFilterForm(forms.Form):
     methods = forms.ChoiceField(widget=forms.Select, required=False)
     parity = forms.ChoiceField(widget=forms.Select, required=False)
     lifestage = forms.ChoiceField(widget=forms.Select, required=False)
-    is_deleted = forms.BooleanField(required=False, label='Is Deleted')
-    is_closed = forms.BooleanField(required=False, label='is Closed')
+    is_deleted = forms.BooleanField(required=False, label='Include Delete Cases')
+    is_closed = forms.BooleanField(required=False, label='Include Closed Cases')
 
     def __init__(self, *args, **kwargs):
         super(ClientFilterForm, self).__init__(*args, **kwargs)
@@ -256,18 +256,13 @@ class ClientFilterForm(forms.Form):
         children = list(Client.CHILDREN_COUNT)
         children.insert(0, ('none', 'Select parity'))
         self.fields['parity'].choices = children
-        sections = Section.objects.filter(course_id=13)
-        methods = []
-        for sect in sections:
-            name = json.loads(sect.title)
-            name = name['en']
-            methods.append((name, name))
+        sections = list(Client.METHODS)
+        sections.insert(0, ('none', 'Select a Method'))
 
-        methods.insert(0, ('none', 'Select a section'))
         lifestage = list(Client.LIFE_STAGE)
         lifestage.insert(0, ('none', 'Select life stage'))
 
-        self.fields['methods'].choices = methods
+        self.fields['methods'].choices = sections
         self.fields['lifestage'].choices = lifestage
         self.helper = FormHelper()
         self.helper.layout = Layout(Row(Div('parity', 'methods', 'lifestage', css_class='input-group')),
