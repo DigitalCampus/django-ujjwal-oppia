@@ -241,7 +241,7 @@ class ClientFilterForm(forms.Form):
     methods = forms.ChoiceField(widget=forms.Select, required=False)
     parity = forms.ChoiceField(widget=forms.Select, required=False)
     lifestage = forms.ChoiceField(widget=forms.Select, required=False)
-    is_deleted = forms.BooleanField(required=False, label='Include Delete Cases')
+    is_deleted = forms.BooleanField(required=False, label='Include Deleted Cases')
     is_closed = forms.BooleanField(required=False, label='Include Closed Cases')
 
     def __init__(self, *args, **kwargs):

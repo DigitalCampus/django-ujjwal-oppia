@@ -801,10 +801,14 @@ def clientfilter_view(request):
                 clients = clients.filter(parity=parity)
             if methods != 'none':
                 clients = clients.filter(using_method=methods)
-            if is_closed:
-                clients = clients.filter(is_closed=True)
-            if is_deleted:
-                clients = clients.filter(is_deleted=True)
+            if is_closed or is_deleted:
+                if not is_closed:
+                    clients = clients.filter(Q(is_closed=False) | Q(is_deleted=True))
+                if not is_deleted:
+                    clients = clients.filter(Q(is_deleted=False) | Q(is_closed=True))
+            else:
+                clients = clients.filter(is_deleted=False)
+                clients = clients.filter(is_closed=False)
 
             for client in clients:
                 if client.adapted_method != "":
@@ -918,6 +922,7 @@ def leaderboards_view(request):
                               {'form': form,
                                'clients': clientsDict,
                                'recent_activity': activity,
+                               'interval': interval,
                                'leaderboard': leaderboard,
                                'user_set': user_set},
                               context_instance=RequestContext(request))
@@ -1003,6 +1008,7 @@ def recent_activity_view(request):
 
     return render_to_response('oppia/recent-activity.html',
                               {'form': form,
+                               'interval': interval,
                                'recent_activity': activity},
                               context_instance=RequestContext(request))
 
