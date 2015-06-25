@@ -35,10 +35,11 @@
 
                 var chart6 = new google.visualization.AreaChart(document.getElementById('course_activity_chart_div'));
                 chart6.draw(data6, {    width: '100%',
-                    height: 400,
+                    height: 450,
                     vAxis: {minValue: 0, title: 'Course Activity Count'},
+                    hAxis: {title: 'Interval: {{ interval }}'},
                     pointSize: 3,
-                    chartArea: {left: 65, width: "90%", height: "75%"},
+                    chartArea: {left: 65, width: "90%", height: "60%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
@@ -62,10 +63,11 @@
 
                 var chart7 = new google.visualization.AreaChart(document.getElementById('course_activity_cumulative_chart_div'));
                 chart7.draw(data7, {    width: '100%',
-                    height: 400,
+                    height: 450,
                     vAxis: {minValue: 0, title: 'Course Activity Count'},
+                    hAxis: {title: 'Interval: {{ interval }}'},
                     pointSize: 3,
-                    chartArea: {left: 65, width: "90%", height: "75%"},
+                    chartArea: {left: 65, width: "90%", height: "60%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [

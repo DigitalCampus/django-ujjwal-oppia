@@ -719,6 +719,18 @@ class Client(models.Model):
         ('unwantedpregnancy', 'Unwanted Pregnancy'),
         ('twoormorechildren', 'Two or more children'),
     )
+    METHODS = (
+        ("IUCD", "IUCD"),
+        ("Injectable", "Injectable"),
+        ("Condom", "Condom"),
+        ("OCP", "OCP"),
+        ("Female Sterilization", "Female Sterilization"),
+        ("NSV (Male Sterilization)", "NSV (Male Sterilization)"),
+        ("ECP", "ECP"),
+        ("Post abortion", "Post abortion"),
+        ("Postpartum Family Planning", "Postpartum Family Planning"),
+
+    )
     user = models.ForeignKey(User)
     created_date = models.DateTimeField(auto_now_add=True, verbose_name='Created Date')
     lastmodified_date = models.DateTimeField(auto_now=True, verbose_name='Modified Date')

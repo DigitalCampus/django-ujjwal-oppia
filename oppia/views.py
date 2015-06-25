@@ -117,6 +117,7 @@ def home_view(request):
                                'clients': clientsDict,
                                'recent_activity': activity,
                                'leaderboard': leaderboard,
+                               'interval': interval,
                                'user_set': user_set},
                               context_instance=RequestContext(request))
 
@@ -312,6 +313,7 @@ def recent_activity(request, id):
                                'form': form,
                                'nav': nav,
                                'data': dates,
+                               'interval': interval,
                                'leaderboard': leaderboard},
                               context_instance=RequestContext(request))
 
@@ -835,7 +837,8 @@ def clientsession_view(request, client):
         clientTrackers = ClientTracker.objects.filter(client__id=client)
         session_dict = {}
         for clint in clientTrackers:
-            diff = clint.end_time - clint.start_time
+            diff = relativedelta(clint.end_time, clint.start_time)
+            diff = '%ihrs: %imin: %isec' % (diff.hours, diff.minutes, diff.seconds)
             session_dict[clint.id] = [clint, diff]
     return render(request, 'oppia/client-session.html', {'sessions': session_dict, 'client': clientObj.name})
 

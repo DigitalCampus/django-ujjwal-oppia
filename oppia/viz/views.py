@@ -845,7 +845,9 @@ def clients_view(request):
                                               'clients': temp_client}
     for key, value in sessions_dict.items():
         temp = sessions_dict[key]
-        temp['time'] /= temp['count']
+        temp_avg = temp['time'] / temp['count']
+        temp['time'] = '%ihrs: %imin: %isec' % (((temp_avg.days * 24) + temp_avg.seconds // 3600),
+                                                (temp_avg.seconds // 60) % 60, temp_avg.seconds % 60)
 
     # clients graphs on all filters
 

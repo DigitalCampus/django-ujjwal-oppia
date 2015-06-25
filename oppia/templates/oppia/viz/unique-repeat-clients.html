@@ -98,13 +98,14 @@
                 {% endfor %}
 
                 var chart15 = new google.visualization.ColumnChart(document.getElementById('clients_marital_status_chart_div'));
-                chart15.draw(data15, {    width: '35%',
+                chart15.draw(data15, {    width: '50%',
                     height: 400,
                     vAxis: {minValue: 0, title: 'Clients Count'},
+                    hAxis: {title: 'Marital Status'},
                     pointSize: 2,
                     chartArea: {left: "5%", width: "40%", height: "60%"},
                     backgroundColor: 'transparent',
-                    legend: {position: 'bottom'},
+                    legend: 'none',
                     title: 'Clients categorization (By Marital Status)',
                     bar: { groupWidth: '35%' }
                 });
@@ -123,13 +124,14 @@
                 {% endfor %}
 
                 var chart16 = new google.visualization.ColumnChart(document.getElementById('clients_using_method_chart_div'));
-                chart16.draw(data16, {    width: '25%',
+                chart16.draw(data16, {    width: '50%',
                     height: 400,
                     vAxis: {minValue: 0, title: 'Clients Count'},
+                    hAxis: {title: 'Using Method'},
                     pointSize: 2,
                     chartArea: {left: "5%", width: "40%", height: "60%"},
                     backgroundColor: 'transparent',
-                    legend: {position: 'bottom'},
+                    legend: 'none',
                     title: 'Clients categorization (Using Method)',
                     bar: { groupWidth: '35%' }
                 });
@@ -148,14 +150,14 @@
                 {% endfor %}
 
                 var chart17 = new google.visualization.ColumnChart(document.getElementById('clients_life_stage_chart_div'));
-                chart17.draw(data17, {    width: '35%',
+                chart17.draw(data17, {    width: '50%',
                     height: 400,
                     vAxis: {minValue: 0, title: 'Clients Count'},
-                    //hAxis: {title: 'Life stages'},
+                    hAxis: {title: 'Life stages'},
                     pointSize: 2,
-                    chartArea: {left: "5%", width: "40%", height: "60%"},
+                    chartArea: {left: "5%", width: "60%", height: "60%"},
                     backgroundColor: 'transparent',
-                    legend: {position: 'bottom'},
+                    legend: 'none',
                     title: 'Clients categorization (Life Stage)',
                     bar: { groupWidth: '35%' }
                 });
@@ -192,7 +194,7 @@
                 <tr>
                     <td>{{ user.user }}</td>
                     <td>{{ user.clients|length }}</td>
-                    <td>{{ user.time }}<b> hrs</b></td>
+                    <td>{{ user.time }}</td>
                 </tr>
 
             {% endfor %}

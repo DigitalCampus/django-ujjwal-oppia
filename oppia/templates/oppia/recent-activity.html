@@ -35,9 +35,10 @@
                 var chart = new google.visualization.AreaChart(document.getElementById('activity_chart_div'));
                 chart.draw(data, {    width: "100%",
                     height: 400,
-                    vAxis: {minValue: 0},
+                    vAxis: {minValue: 0, title: 'Count'},
+                    hAxis: {title: 'Interval: {{ interval }}'},
                     pointSize: 3,
-                    chartArea: {left: 45, top: 10, width: "90%", height: "75%"},
+                    chartArea: {left: 55, top: 10, width: "90%", height: "75%"},
                     backgroundColor: 'transparent',
                     legend: 'none',
                     series: [
