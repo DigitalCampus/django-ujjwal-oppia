@@ -42,6 +42,7 @@ def server_view(request):
 
 def home_view(request):
     activity = []
+    interval = ''
     if request.user.is_authenticated():
         start_date = timezone.now() - datetime.timedelta(days=31)
         end_date = timezone.now()
