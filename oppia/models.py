@@ -729,6 +729,7 @@ class Client(models.Model):
         ("ECP", "ECP"),
         ("Post abortion", "Post abortion"),
         ("Postpartum Family Planning", "Postpartum Family Planning"),
+        ("Traditional Method", "Traditional Method"),
 
     )
     user = models.ForeignKey(User)

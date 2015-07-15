@@ -1,3 +1,4 @@
+# coding=utf-8
 # oppia/views.py
 import datetime
 import json
@@ -15,7 +16,7 @@ from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.core.urlresolvers import reverse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.forms.formsets import formset_factory
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.shortcuts import render, render_to_response
@@ -24,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
 from oppia.forms import UploadCourseStep1Form, UploadCourseStep2Form, ScheduleForm, DateRangeForm, DateRangeIntervalForm
-from oppia.forms import ActivityScheduleForm, CohortForm, ClientFilterForm
+from oppia.forms import ActivityScheduleForm, CohortForm, ClientFilterForm, ClientConversionFilterForm
 from oppia.models import Course, Tracker, Tag, CourseTag, Schedule, Client, ClientTracker
 from oppia.models import ActivitySchedule, Activity, Cohort, Participant, Points, CourseDownload
 from oppia.quiz.models import Quiz, QuizAttempt, QuizAttemptResponse
@@ -783,6 +784,24 @@ def course_feedback_responses(request, course_id, quiz_id):
 
 
 def clientfilter_view(request):
+    methods_dict = {'Traditional Method': "पारंपरिक विधि", 'IUCD': "आई.यू .से .दी.", 'Condom': 'कंडोम',
+                    'Injectable': "गर्भनिरोधक सूई", "OCP": "गर्भनिरोधक गोली", 'Female Sterilization': "महिला नसबंदी",
+                    'NSV (Male Sterilization)': "एन. एस. वी. (पुरुष नसबंदी)", "ECP": 'आपातकालीन गोली',
+                    'Post abortion': "गर्भपात उपरांत", 'Postpartum Family Planning': "प्रसव उपरांत"}
+
+    lifestage_dict = {'adolescent': "بالغ", 'newlymarried': "نو وھاتا", 'pregnant': "حاملہ",
+                      'onechild': "ایک بچہ", 'unwantedpregnancy': "انچاهاحمل",
+                      'twoormorechildren': "دو یا دو سے زیادہ بچے"}
+
+    methods_dict_urdu = {'Traditional Method': "روایتی طریقہ", 'IUCD': "آئ یو ڈی", 'Condom': 'کنڈوم',
+                         'Injectable': "مانع حمل ٹیکہ", "OCP": "مانع حمل گولیاں", 'Female Sterilization': "نل بندی",
+                         'NSV (Male Sterilization)': "نس بندی", "ECP": 'ہنگامی گولی مانع حمل',
+                         'Post abortion': "اسقاط حمل کے بعد", 'Postpartum Family Planning': "ترسیل کے بعد"}
+
+    lifestage_dict_urdu = {'adolescent': "किशोरावस्था ", 'newlymarried': "नव विहाहित", 'pregnant': "गर्भवती ",
+                           'onechild': "एक बच्चे वाले दंपत्ति", 'unwantedpregnancy': "अनचाहा गर्भ",
+                           'twoormorechildren': "दो या दो से अधिक वाले दंपत्ति"}
+
     if request.method == 'POST':
         form = ClientFilterForm(request.POST)
         if form.is_valid():
@@ -797,11 +816,13 @@ def clientfilter_view(request):
             if user != 'none':
                 clients = clients.filter(user__username=user).order_by('id')
             if lifestage != 'none':
-                clients = clients.filter(life_stage=lifestage)
+                clients = clients.filter(Q(life_stage=lifestage) | Q(life_stage=lifestage_dict[lifestage]) |
+                                         Q(life_stage=lifestage_dict_urdu[lifestage]))
             if parity != 'none':
                 clients = clients.filter(parity=parity)
             if methods != 'none':
-                clients = clients.filter(using_method=methods)
+                clients = clients.filter(Q(using_method=methods) | Q(using_method=methods_dict[methods]) |
+                                         Q(using_method=methods_dict_urdu[methods]))
             if is_closed or is_deleted:
                 if not is_closed:
                     clients = clients.filter(Q(is_closed=False) | Q(is_deleted=True))
@@ -812,6 +833,7 @@ def clientfilter_view(request):
                 clients = clients.filter(is_closed=False)
 
             for client in clients:
+
                 if client.adapted_method != "":
                     splits = client.adapted_method.split("_")
                     client.adapted_method = splits[0]
@@ -1152,3 +1174,62 @@ def films_export(request):
 
     return response
 
+
+def clientconversion_view(request):
+    methods_dict = {'Traditional Method': "पारंपरिक विधि"}
+    methods_dict_urdu = {'Traditional Method': "روایتی طریقہ"}
+    if request.method == 'POST':
+        form = ClientConversionFilterForm(request.POST)
+        if form.is_valid():
+            clientsDict = {}
+
+            conversions = form.cleaned_data['conversions']
+            clients = Client.objects.all()
+
+            m2m = False
+            if conversions != 'none':
+                if conversions == 'none2method':
+                    clients = clients.filter(Q(using_method='') | Q(using_method=None)).exclude(adapted_method='')
+                elif conversions == 'traditional2method':
+                    clients = clients.filter(Q(using_method='Traditional Method') |
+                                             Q(using_method=methods_dict['Traditional Method']) |
+                                             Q(using_method=methods_dict_urdu['Traditional Method'])). \
+                        exclude(adapted_method='')
+                else:
+                    clients = clients.filter(~Q(using_method='')).exclude(adapted_method=''). \
+                        exclude(using_method=methods_dict['Traditional Method']). \
+                        exclude(using_method=methods_dict_urdu['Traditional Method'])
+                    m2m = True
+
+            for client in clients:
+                if m2m:
+                    if client.adapted_method != "":
+                        splits = client.adapted_method.split("_")
+                        client.adapted_method = splits[0]
+                        client.lastmodified_date = splits[1].split(" ")[0]
+                    if client.adapted_method != client.using_method and client.using_method != None:
+                        if client.using_method != 'Traditional Method':
+                            clientsDict[client.id] = [client, []]
+                else:
+                    if client.adapted_method != "":
+                        splits = client.adapted_method.split("_")
+                        client.adapted_method = splits[0]
+                        client.lastmodified_date = splits[1].split(" ")[0]
+                    clientsDict[client.id] = [client, []]
+            clientTrackers = ClientTracker.objects.all().order_by('client__id')
+            for tracker in clientTrackers:
+                if clientsDict.has_key(tracker.client_id):
+                    val = clientsDict[tracker.client_id][1]
+                    val.append(tracker)
+                else:
+                    if len(clientsDict) == 1:
+                        for key, value in clientsDict.items():
+                            tracker.client_id = key
+                            tracker.save()
+                        val = clientsDict[tracker.client_id][1]
+                        val.append(tracker)
+            return render(request, 'oppia/clients-conversion.html', {'form': form, 'clients': clientsDict})
+    else:
+        form = ClientConversionFilterForm()
+
+    return render(request, 'oppia/clients-conversion.html', {'form': form, })

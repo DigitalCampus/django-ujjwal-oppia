@@ -105,8 +105,9 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th>{% trans 'Client Name' %}</th>
                         <th>{% trans 'User' %}</th>
+                        <th>{% trans 'Client Name' %}</th>
+
                         <th>{% trans 'Age' %}</th>
                         <th>{% trans 'Gender' %}</th>
                         <th>{% trans 'Mobile Number' %}</th>
@@ -126,8 +127,9 @@
                     {% for key,client in clients.items %}
 
                         <tr>
-                            <td>{{ client.0.name }}</td>
                             <td>{{ client.0.user.username }}</td>
+                            <td>{{ client.0.name }}</td>
+
                             <td>{{ client.0.age }}</td>
                             <td>{{ client.0.gender }}</td>
                             <td>{{ client.0.mobile_number }}</td>

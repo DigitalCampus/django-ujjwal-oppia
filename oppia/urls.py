@@ -110,6 +110,9 @@ urlpatterns = patterns('',
 
                        url(r'^clients/$', 'oppia.views.clients_view', name="clients"),
 
+                       url(r'^client-conversions/$', 'oppia.views.clientconversion_view',
+                           name="client-conversions"),
+
                        url(r'^recent-activity/$', 'oppia.views.recent_activity_view', name="recent-activity"),
 
 )

@@ -740,6 +740,7 @@ class ClientsResource(ModelResource):
         user = User.objects.get(username__exact=bundle.request.user.username)
         clients_return = []
         clients_id_dict = {}
+        is_closed_exist = False
         for client in clients:
             if not (Client.objects.filter(id=int(client['clientServerId']))):
                 client_temp = Client()
@@ -757,6 +758,7 @@ class ClientsResource(ModelResource):
                 client_temp.husband_name = client['husbandName']
                 client_temp.using_method = client['methodName']
                 if 'clientCloseCase' in client.keys():
+                    is_closed_exist = True
                     client_temp.is_closed = bool(client['clientCloseCase'])
                     client_temp.is_deleted = bool(client['clientDeleteRecord'])
                 if 'adaptedMethodName' in client.keys():
@@ -781,6 +783,7 @@ class ClientsResource(ModelResource):
                 client_exist.husband_name = client['husbandName']
                 client_exist.using_method = client['methodName']
                 if 'clientCloseCase' in client.keys():
+                    is_closed_exist = True
                     client_exist.is_closed = bool(client['clientCloseCase'])
                     client_exist.is_deleted = bool(client['clientDeleteRecord'])
                 if 'adaptedMethodName' in client.keys():
@@ -815,9 +818,15 @@ class ClientsResource(ModelResource):
                         else:
                             clien['clientId'] = -1
                     elif key == 'is_closed' or key == 'is_deleted':
-                        clien[naming_convention[key]] = int(clien.pop(key))
+                        if is_closed_exist:
+                            clien[naming_convention[key]] = int(clien.pop(key))
+                        else:
+                            clien.pop(key)
                     else:
-                        clien[naming_convention[key]] = clien.pop(key)
+                        if key == 'adapted_method' and not is_closed_exist:
+                            clien.pop(key)
+                        else:
+                            clien[naming_convention[key]] = clien.pop(key)
             temp.append(clien)
         # clients_return = json.dumps(temp)
         bundle.data['clients'] = temp
