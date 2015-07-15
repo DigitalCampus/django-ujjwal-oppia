@@ -262,6 +262,9 @@ class ClientFilterForm(forms.Form):
         lifestage = list(Client.LIFE_STAGE)
         lifestage.insert(0, ('none', 'Select life stage'))
 
+        conversions = (('none', 'Select Tracking Conversion'), ('none2method', 'No Method to Method'),
+                       ('traditional2method', 'Traditional Method to Method'), ('method2method', 'Method to Method'))
+
         self.fields['methods'].choices = sections
         self.fields['lifestage'].choices = lifestage
         self.helper = FormHelper()
@@ -269,6 +272,23 @@ class ClientFilterForm(forms.Form):
                                     Row(Div('is_deleted', 'is_closed', )),
                                     Row(FieldWithButtons('users', Submit('submit', _(u'Go'),
                                                                          css_class='btn btn-default'),
+                                                         Reset('Reset', _(u'Reset'),
+                                                               css_class='btn btn-primary')), ))
+
+
+class ClientConversionFilterForm(forms.Form):
+    conversions = forms.ChoiceField(widget=forms.Select, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(ClientConversionFilterForm, self).__init__(*args, **kwargs)
+
+        conversions = (('none', 'Select Tracking Conversion'), ('none2method', 'No Method to Method'),
+                       ('traditional2method', 'Traditional Method to Method'), ('method2method', 'Method to Method'))
+
+        self.fields['conversions'].choices = conversions
+        self.helper = FormHelper()
+        self.helper.layout = Layout(Row(FieldWithButtons('conversions', Submit('submit', _(u'Go'),
+                                                                               css_class='btn btn-default'),
                                                          Reset('Reset', _(u'Reset'),
                                                                css_class='btn btn-primary')), ))
 
