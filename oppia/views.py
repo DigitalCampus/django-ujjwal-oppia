@@ -861,12 +861,12 @@ def clientfilter_view(request):
 def clientsession_view(request, client):
     if request.method == 'GET':
         clientObj = Client.objects.get(id=client)
-        clientTrackers = ClientTracker.objects.filter(client__id=client)
-        session_dict = {}
+        clientTrackers = ClientTracker.objects.filter(client__id=client).order_by('-start_time')
+        session_dict = []
         for clint in clientTrackers:
             diff = relativedelta(clint.end_time, clint.start_time)
             diff = '%ihrs: %imin: %isec' % (diff.hours, diff.minutes, diff.seconds)
-            session_dict[clint.id] = [clint, diff]
+            session_dict.append([clint, diff])
     return render(request, 'oppia/client-session.html', {'sessions': session_dict, 'client': clientObj.name})
 
 

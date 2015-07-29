@@ -46,13 +46,12 @@
                 </thead>
                 <tbody>
 
-                {% for key, session in sessions.items %}
-
+                {% for list in sessions %}
                     <tr>
 
-                        <td>{{ session.0.start_time }}</td>
-                        <td>{{ session.0.end_time }}</td>
-                        <td>{{ session.1 }}</td>
+                        <td>{{ list.0.start_time }}</td>
+                        <td>{{ list.0.end_time }}</td>
+                        <td>{{ list.1 }}</td>
 
                     </tr>
                 {% endfor %}
