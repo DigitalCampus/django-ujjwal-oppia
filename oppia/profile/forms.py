@@ -130,11 +130,12 @@ class RegisterForm(forms.Form):
 
 class ResetForm(forms.Form):
     username = forms.CharField(max_length=30,
-        error_messages={'invalid': _(u'Please enter a username.')},
+        error_messages={'invalid': _(u'Please enter a username or email address.')},
         required=True)
     
     def __init__(self, *args, **kwargs):
         super(ResetForm, self).__init__(*args, **kwargs)
+        self.fields['username'].label = "Username or email"
         self.helper = FormHelper()
         self.helper.form_action = reverse('profile_reset')
         self.helper.form_class = 'form-horizontal'
@@ -151,23 +152,27 @@ class ResetForm(forms.Form):
     def clean(self):
         cleaned_data = self.cleaned_data
         username = cleaned_data.get("username")
-        num_rows = User.objects.filter(username__exact=username).count()
-        if num_rows != 1:
-            raise forms.ValidationError( _(u"Username not found"))
+        try:
+            user = User.objects.get(username__exact=username)
+        except User.DoesNotExist:
+            try:
+                user = User.objects.get(email__exact=username)
+            except User.DoesNotExist:
+                raise forms.ValidationError( _(u"Username/email not found"))
         return cleaned_data
 
 class ProfileForm(forms.Form):
     api_key = forms.CharField(widget = forms.TextInput(attrs={'readonly':'readonly'}),
-                               required=False, help_text=_(u'You cannot edit your API Key.'))
+                               required=False, help_text=_(u'You cannot edit the API Key.'))
     username = forms.CharField(widget = forms.TextInput(attrs={'readonly':'readonly'}),
-                               required=False, help_text=_(u'You cannot edit your username.'))
+                               required=False, help_text=_(u'You cannot edit the username.'))
     email = forms.CharField(validators=[validate_email],
                             error_messages={'invalid': _(u'Please enter a valid e-mail address.')},
                             required=True)
     password = forms.CharField(widget=forms.PasswordInput,
                                required=False,
                                min_length=6,
-                               error_messages={'min_length': _(u'Your new password should be at least 6 characters long')},)
+                               error_messages={'min_length': _(u'The new password should be at least 6 characters long')},)
     password_again = forms.CharField(widget=forms.PasswordInput,
                                      required=False,
                                      min_length=6)
@@ -190,7 +195,6 @@ class ProfileForm(forms.Form):
             email = kw['email'] 
             username = kw['username'] 
         self.helper = FormHelper()
-        self.helper.form_action = reverse('profile_edit')
         self.helper.form_class = 'form-horizontal'
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-4'
@@ -206,7 +210,7 @@ class ProfileForm(forms.Form):
                         Div(
                             HTML(mark_safe('<img src="{0}" alt="gravatar for {1}" class="gravatar" width="{2}" height="{2}"/>'.format(gravatar_url, username, 64))),
                             HTML("""<br/>"""),
-                            HTML("""<a href="https://www.gravatar.com">"""+_(u'Update your gravatar')+"""</a>"""),
+                            HTML("""<a href="https://www.gravatar.com">"""+_(u'Update gravatar')+"""</a>"""),
                             css_class="col-lg-4",
                         ),
                         css_class="form-group",
@@ -264,3 +268,24 @@ class ProfileForm(forms.Form):
                 raise forms.ValidationError( _(u"Passwords do not match."))
             
         return cleaned_data
+    
+class UploadProfileForm(forms.Form):
+    upload_file = forms.FileField(
+                required=True,
+                error_messages={'required': _('Please select a file to upload')},)
+    
+    def __init__(self, *args, **kwargs):
+        super(UploadProfileForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_action = reverse('profile_upload')
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-lg-2'
+        self.helper.field_class = 'col-lg-4'
+        self.helper.layout = Layout(
+                'upload_file',
+                Div(
+                   Submit('submit', _(u'Upload'), css_class='btn btn-default'),
+                   css_class='col-lg-offset-2 col-lg-4',
+                ),
+            ) 
+    
