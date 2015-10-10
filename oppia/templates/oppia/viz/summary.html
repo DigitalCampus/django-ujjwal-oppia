@@ -3,6 +3,10 @@
 {% load display_functions %}
 {% load crispy_forms_tags %}
 
+{% block extra_head_title %}
+    {% trans 'Summary Overview' %}
+{% endblock extra_head_title %}
+
 {% block extra_body %}
     onload="setUpDatePicker();"
 {% endblock extra_body %}
@@ -41,7 +45,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
@@ -68,7 +72,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
@@ -140,7 +144,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
@@ -167,7 +171,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
@@ -192,7 +196,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
@@ -219,7 +223,7 @@
                 height: 400,
                 vAxis: {minValue: 0},
                 pointSize: 3,
-                chartArea: {left: 45, width: "90%", height: "75%"},
+                chartArea: {left: 80, width: "90%", height: "75%"},
                 backgroundColor: 'transparent',
                 legend: 'none',
                 series: [
