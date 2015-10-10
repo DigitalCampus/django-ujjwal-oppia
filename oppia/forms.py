@@ -261,11 +261,6 @@ class DateRangeIntervalForm(forms.Form):
         return cleaned_data
 
 
-class ClientForm(forms.ModelForm):
-    class Meta:
-        model = Client
-
-
 class ClientFilterForm(forms.Form):
     users = forms.ChoiceField(widget=forms.Select, required=False)
     methods = forms.ChoiceField(widget=forms.Select, required=False)

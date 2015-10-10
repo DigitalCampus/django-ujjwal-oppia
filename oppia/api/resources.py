@@ -23,7 +23,10 @@ from tastypie.authorization import Authorization, ReadOnlyAuthorization
 from tastypie.exceptions import NotFound, BadRequest, InvalidFilterError
 from tastypie.exceptions import Unauthorized, HydrationError, InvalidSortError, ImmediateHttpResponse
 from tastypie.models import ApiKey
-from tastypie.resources import ModelResource, Resource, convert_post_to_patch, dict_strip_unicode_keys
+from tastypie.resources import ModelResource
+from tastypie.resources import Resource
+from tastypie.resources import convert_post_to_patch
+from tastypie.resources import dict_strip_unicode_keys
 from tastypie.serializers import Serializer
 from tastypie.utils import trailing_slash
 from tastypie.validation import Validation
