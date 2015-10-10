@@ -2,7 +2,7 @@
 from django.contrib import admin
 from oppia.models import Course,Section,Activity,Tracker,Media,Cohort
 from oppia.models import Participant,Message,Schedule,ActivitySchedule,Tag,CourseTag
-from oppia.models import Badge,Award,Points,AwardCourse,CourseDownload, UserProfile, Client
+from oppia.models import Badge,Award,Points,AwardCourse, UserProfile#, Client
 
 class TrackerAdmin(admin.ModelAdmin):
     list_display = ('user', 'submitted_date', 'tracker_date', 'time_taken', 'agent', 'course','completed')
@@ -17,7 +17,7 @@ class ParticipantInline(admin.TabularInline):
     model = Participant
     
 class CohortAdmin(admin.ModelAdmin):
-    list_display = ('course', 'description', 'start_date', 'end_date','schedule')
+    list_display = ('description', 'start_date', 'end_date','schedule')
     inlines = [
         ParticipantInline,
     ]
@@ -26,7 +26,7 @@ class BadgeAdmin(admin.ModelAdmin):
     list_display = ('description','points')
  
 class PointsAdmin(admin.ModelAdmin):
-    list_display = ('user','type','course','cohort','points','date','description')
+    list_display = ('user','type','course','points','date','description')
     
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ('title','section','type','digest')
@@ -42,9 +42,6 @@ class AwardAdmin(admin.ModelAdmin):
   
 class CourseTagAdmin(admin.ModelAdmin):
     list_display = ('course','tag')
- 
-class CourseDownloadAdmin(admin.ModelAdmin):
-    list_display = ('user', 'course','download_date','course_version','ip','agent')
     
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'about', 'job_title', 'organisation')
@@ -72,7 +69,6 @@ admin.site.register(Badge,BadgeAdmin)
 admin.site.register(AwardCourse,AwardCourseAdmin)
 admin.site.register(Cohort, CohortAdmin)                    
 admin.site.register(Course,CourseAdmin)
-admin.site.register(CourseDownload, CourseDownloadAdmin)
 admin.site.register(CourseTag,CourseTagAdmin)
 admin.site.register(Media, MediaAdmin)
 admin.site.register(Message)
@@ -83,4 +79,4 @@ admin.site.register(Section,SectionAdmin)
 admin.site.register(Tag,TagAdmin)
 admin.site.register(Tracker, TrackerAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(Client, ClientAdmin)
+#admin.site.register(Client, ClientAdmin)
