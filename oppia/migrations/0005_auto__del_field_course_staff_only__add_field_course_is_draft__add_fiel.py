@@ -8,246 +8,31 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Course'
-        db.create_table(u'oppia_course', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('created_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('lastupdated_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('version', self.gf('django.db.models.fields.BigIntegerField')()),
-            ('title', self.gf('django.db.models.fields.TextField')()),
-            ('shortname', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('filename', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('badge_icon', self.gf('django.db.models.fields.files.FileField')(default=None, max_length=100, blank=True)),
-        ))
-        db.send_create_signal(u'oppia', ['Course'])
+        # Deleting field 'Course.staff_only'
+        db.delete_column(u'oppia_course', 'staff_only')
 
-        # Adding model 'Tag'
-        db.create_table(u'oppia_tag', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.TextField')()),
-            ('created_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-        ))
-        db.send_create_signal(u'oppia', ['Tag'])
+        # Adding field 'Course.is_draft'
+        db.add_column(u'oppia_course', 'is_draft',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
 
-        # Adding model 'CourseTag'
-        db.create_table(u'oppia_coursetag', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('tag', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Tag'])),
-        ))
-        db.send_create_signal(u'oppia', ['CourseTag'])
-
-        # Adding model 'Schedule'
-        db.create_table(u'oppia_schedule', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('title', self.gf('django.db.models.fields.TextField')()),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('default', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('created_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('lastupdated_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-        ))
-        db.send_create_signal(u'oppia', ['Schedule'])
-
-        # Adding model 'ActivitySchedule'
-        db.create_table(u'oppia_activityschedule', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('schedule', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Schedule'])),
-            ('digest', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('start_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('end_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-        ))
-        db.send_create_signal(u'oppia', ['ActivitySchedule'])
-
-        # Adding model 'Section'
-        db.create_table(u'oppia_section', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('order', self.gf('django.db.models.fields.IntegerField')()),
-            ('title', self.gf('django.db.models.fields.TextField')()),
-        ))
-        db.send_create_signal(u'oppia', ['Section'])
-
-        # Adding model 'Activity'
-        db.create_table(u'oppia_activity', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('section', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Section'])),
-            ('order', self.gf('django.db.models.fields.IntegerField')()),
-            ('title', self.gf('django.db.models.fields.TextField')()),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=10)),
-            ('digest', self.gf('django.db.models.fields.CharField')(max_length=100)),
-        ))
-        db.send_create_signal(u'oppia', ['Activity'])
-
-        # Adding model 'Media'
-        db.create_table(u'oppia_media', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('digest', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('filename', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('download_url', self.gf('django.db.models.fields.URLField')(max_length=200)),
-        ))
-        db.send_create_signal(u'oppia', ['Media'])
-
-        # Adding model 'Tracker'
-        db.create_table(u'oppia_tracker', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('submitted_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('tracker_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('ip', self.gf('django.db.models.fields.IPAddressField')(max_length=15)),
-            ('agent', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('digest', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('data', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['oppia.Course'], null=True, blank=True)),
-            ('type', self.gf('django.db.models.fields.CharField')(default=None, max_length=10, null=True, blank=True)),
-            ('completed', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('time_taken', self.gf('django.db.models.fields.IntegerField')(default=0)),
-        ))
-        db.send_create_signal(u'oppia', ['Tracker'])
-
-        # Adding model 'CourseDownload'
-        db.create_table(u'oppia_coursedownload', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('download_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('course_version', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
-        ))
-        db.send_create_signal(u'oppia', ['CourseDownload'])
-
-        # Adding model 'Cohort'
-        db.create_table(u'oppia_cohort', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('start_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('end_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('schedule', self.gf('django.db.models.fields.related.ForeignKey')(default=None, to=orm['oppia.Schedule'], null=True, blank=True)),
-        ))
-        db.send_create_signal(u'oppia', ['Cohort'])
-
-        # Adding model 'Participant'
-        db.create_table(u'oppia_participant', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('cohort', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Cohort'])),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('role', self.gf('django.db.models.fields.CharField')(max_length=20)),
-        ))
-        db.send_create_signal(u'oppia', ['Participant'])
-
-        # Adding model 'Message'
-        db.create_table(u'oppia_message', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('author', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('date_created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('publish_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('message', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('link', self.gf('django.db.models.fields.URLField')(max_length=255)),
-            ('icon', self.gf('django.db.models.fields.CharField')(max_length=200)),
-        ))
-        db.send_create_signal(u'oppia', ['Message'])
-
-        # Adding model 'Badge'
-        db.create_table(u'oppia_badge', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ref', self.gf('django.db.models.fields.CharField')(max_length=20)),
-            ('name', self.gf('django.db.models.fields.TextField')()),
-            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('default_icon', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
-            ('points', self.gf('django.db.models.fields.IntegerField')(default=100)),
-            ('allow_multiple_awards', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal(u'oppia', ['Badge'])
-
-        # Adding model 'Award'
-        db.create_table(u'oppia_award', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('badge', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Badge'])),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('description', self.gf('django.db.models.fields.TextField')()),
-            ('award_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-        ))
-        db.send_create_signal(u'oppia', ['Award'])
-
-        # Adding model 'AwardCourse'
-        db.create_table(u'oppia_awardcourse', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('award', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Award'])),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'])),
-            ('course_version', self.gf('django.db.models.fields.BigIntegerField')(default=0)),
-        ))
-        db.send_create_signal(u'oppia', ['AwardCourse'])
-
-        # Adding model 'Points'
-        db.create_table(u'oppia_points', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('course', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Course'], null=True)),
-            ('cohort', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['oppia.Cohort'], null=True)),
-            ('points', self.gf('django.db.models.fields.IntegerField')()),
-            ('date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
-            ('description', self.gf('django.db.models.fields.TextField')()),
-            ('data', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=20)),
-        ))
-        db.send_create_signal(u'oppia', ['Points'])
+        # Adding field 'Course.is_archived'
+        db.add_column(u'oppia_course', 'is_archived',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'Course'
-        db.delete_table(u'oppia_course')
+        # Adding field 'Course.staff_only'
+        db.add_column(u'oppia_course', 'staff_only',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
 
-        # Deleting model 'Tag'
-        db.delete_table(u'oppia_tag')
+        # Deleting field 'Course.is_draft'
+        db.delete_column(u'oppia_course', 'is_draft')
 
-        # Deleting model 'CourseTag'
-        db.delete_table(u'oppia_coursetag')
-
-        # Deleting model 'Schedule'
-        db.delete_table(u'oppia_schedule')
-
-        # Deleting model 'ActivitySchedule'
-        db.delete_table(u'oppia_activityschedule')
-
-        # Deleting model 'Section'
-        db.delete_table(u'oppia_section')
-
-        # Deleting model 'Activity'
-        db.delete_table(u'oppia_activity')
-
-        # Deleting model 'Media'
-        db.delete_table(u'oppia_media')
-
-        # Deleting model 'Tracker'
-        db.delete_table(u'oppia_tracker')
-
-        # Deleting model 'CourseDownload'
-        db.delete_table(u'oppia_coursedownload')
-
-        # Deleting model 'Cohort'
-        db.delete_table(u'oppia_cohort')
-
-        # Deleting model 'Participant'
-        db.delete_table(u'oppia_participant')
-
-        # Deleting model 'Message'
-        db.delete_table(u'oppia_message')
-
-        # Deleting model 'Badge'
-        db.delete_table(u'oppia_badge')
-
-        # Deleting model 'Award'
-        db.delete_table(u'oppia_award')
-
-        # Deleting model 'AwardCourse'
-        db.delete_table(u'oppia_awardcourse')
-
-        # Deleting model 'Points'
-        db.delete_table(u'oppia_points')
+        # Deleting field 'Course.is_archived'
+        db.delete_column(u'oppia_course', 'is_archived')
 
 
     models = {
@@ -289,6 +74,7 @@ class Migration(SchemaMigration):
         },
         u'oppia.activity': {
             'Meta': {'object_name': 'Activity'},
+            'baseline': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'digest': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'order': ('django.db.models.fields.IntegerField', [], {}),
@@ -344,6 +130,8 @@ class Migration(SchemaMigration):
             'created_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'filename': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_archived': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_draft': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'lastupdated_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'shortname': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'title': ('django.db.models.fields.TextField', [], {}),
@@ -352,10 +140,12 @@ class Migration(SchemaMigration):
         },
         u'oppia.coursedownload': {
             'Meta': {'object_name': 'CourseDownload'},
+            'agent': ('django.db.models.fields.TextField', [], {'default': 'None', 'blank': 'True'}),
             'course': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['oppia.Course']"}),
             'course_version': ('django.db.models.fields.BigIntegerField', [], {'default': '0'}),
             'download_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'ip': ('django.db.models.fields.IPAddressField', [], {'default': 'None', 'max_length': '15', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
         },
         u'oppia.coursetag': {
