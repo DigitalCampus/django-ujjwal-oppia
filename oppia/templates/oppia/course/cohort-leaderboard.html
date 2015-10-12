@@ -7,7 +7,7 @@
 {% endblock extra_head_title %}
 
 {% block content %}
-<h2>{% trans 'Leaderboard' %}</h2>
+<h3><a href="{% url 'oppia_cohort_view' cohort.id %}">{{ cohort.description }}</a> &gt; {% trans 'Leaderboard' %}</h3>
 
 {% if page.object_list.count > 0  %}
 	{% include "oppia/includes/page_navigator.html" %}
@@ -26,13 +26,9 @@
 	{% for user in page.object_list %}
 			<tr>
 				<td>{{ forloop.counter0|get_index:page.start_index }}</td>
-				<td>{% if OPPIA_SHOW_GRAVATARS %} {{ user|gravatar:24 }} 
-				{% endif %} 
-				{% if request.user.is_staff %}
+				<td>
+					{% if OPPIA_SHOW_GRAVATARS %} {{ user|gravatar:24 }} {% endif %} 
 					<a href="{% url 'profile_user_activity' user.id %}">{{ user.first_name }} {{ user.last_name }}</a>
-				{% else %}
-					{{ user.first_name }} {{ user.last_name }}
-				{% endif %}
 				</td>
 				<td><span title="{{ user.total  }} {% trans 'points' %}">
 					{{ user.total }}</span></td>
