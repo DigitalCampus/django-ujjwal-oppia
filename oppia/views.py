@@ -736,7 +736,7 @@ def cohort_list_view(request):
                               {'cohorts':cohorts,}, 
                               context_instance=RequestContext(request))
 
-def cohort_add(request, course_id):
+def cohort_add(request):
     if not can_add_cohort(request): 
         return HttpResponse('Unauthorized', status=401) 
 #     course = check_owner(request, course_id)
