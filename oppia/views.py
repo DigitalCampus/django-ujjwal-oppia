@@ -740,7 +740,7 @@ def cohort_add(request):
     if not can_add_cohort(request): 
         return HttpResponse('Unauthorized', status=401) 
 #     course = check_owner(request, course_id)
-    course = ""
+   
     if request.method == 'POST':
         form = CohortForm(request.POST)
         if form.is_valid():  # All validation rules pass
@@ -789,7 +789,7 @@ def cohort_add(request):
     else:
         form = CohortForm()  # An unbound form
 
-    return render(request, 'oppia/cohort-form.html', {'course': course, 'form': form, })
+    return render(request, 'oppia/cohort-form.html', {'form': form, })
 
 def cohort_view(request,cohort_id):
     cohort, response = can_view_cohort(request,cohort_id)
@@ -1407,10 +1407,11 @@ def course_downloads_export(request):
         'UserId', 'Course', 'Download Date', 'Course Version', 'IP', 'Agent')
     data = []
     data = tablib.Dataset(*data, headers=headers)
-    downloads = CourseDownload.objects.all()
+    downloads = Tracker.objects.filter(type="download")
+    #downloads = CourseDownload.objects.all()
     for c in downloads:
         try:
-            data.append((c.user_id, c.course_id, c.download_date.strftime('%Y-%m-%d %H:%M:%S'), c.course_version, c.ip,
+            data.append((c.user_id, c.course_id, c.submitted_date.strftime('%Y-%m-%d %H:%M:%S'), c.course.version, c.ip,
                          c.agent))
         except ValueError:
             pass
