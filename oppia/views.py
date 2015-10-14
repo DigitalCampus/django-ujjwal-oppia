@@ -740,6 +740,7 @@ def cohort_add(request):
     if not can_add_cohort(request): 
         return HttpResponse('Unauthorized', status=401) 
 #     course = check_owner(request, course_id)
+    course = ""
     if request.method == 'POST':
         form = CohortForm(request.POST)
         if form.is_valid():  # All validation rules pass
