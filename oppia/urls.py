@@ -67,7 +67,7 @@ urlpatterns = patterns('',
                            name="oppia_upload_success"),
 #                        url(r'^course/$', 'oppia.views.course_view', name="oppia_course"),
                        
-#                        url(r'^course/$', 'oppia.views.courses_list_view', name="oppia_course"),
+                       url(r'^course/$', 'oppia.views.courses_list_view', name="oppia_course"),
 #                        url(r'^course/tag/(?P<id>\d+)/$', 'oppia.views.tag_courses_view', name="oppia_tag_courses"),
 #                        url(r'^course/(?P<id>\d+)/$', 'oppia.views.recent_activity', name="oppia_recent_activity"),
 #                        url(r'^course/(?P<id>\d+)/detail/$', 'oppia.views.recent_activity_detail',

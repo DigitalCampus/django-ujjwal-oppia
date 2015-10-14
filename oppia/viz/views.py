@@ -16,7 +16,7 @@ from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 
 from oppia.forms import DateDiffForm, DateRangeIntervalForm
-from oppia.models import Tracker, Course, ClientTracker, Section, Client, Activity
+from oppia.models import Tracker, Course, ClientTracker, Section, Client, Activity,CourseDownload
 from oppia.viz.models import UserLocationVisualization
 
 
