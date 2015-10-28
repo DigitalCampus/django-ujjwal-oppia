@@ -7,13 +7,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('oppia', '0001_initial'),
+        ('oppia', '0003_about_userprofile'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='userprofile',
             name='about',
-            field=models.TextField(default=None),
+            field=models.TextField(default=None, null=True, blank=True),
         ),
     ]

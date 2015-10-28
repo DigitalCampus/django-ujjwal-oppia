@@ -921,7 +921,7 @@ class ClientTrackerResource(ModelResource):
             client_tracker.user = user
             client = Client.objects.get(id=int(session['clientId']))
             client_tracker.client = client
-            client_tracker.save()
+            client_tracker.save(force_insert=True)
         client = Client()
         client.user = user
         client.id = 99999
