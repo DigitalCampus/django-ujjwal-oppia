@@ -1189,13 +1189,13 @@ def clientfilter_view(request):
                 if clientsDict.has_key(tracker.client_id):
                     val = clientsDict[tracker.client_id][1]
                     val.append(tracker)
-                else:
-                    if len(clientsDict) == 1:
-                        for key, value in clientsDict.items():
-                            tracker.client_id = key
-                            tracker.save()
-                        val = clientsDict[tracker.client_id][1]
-                        val.append(tracker)
+#                 else:
+#                     if len(clientsDict) == 1:
+#                         for key, value in clientsDict.items():
+#                             tracker.client_id = key
+#                             tracker.save()
+#                         val = clientsDict[tracker.client_id][1]
+#                         val.append(tracker)
             return render(request, 'oppia/clients-filter.html', {'form': form, 'clients': clientsDict, 'usr': user})
     else:
         form = ClientFilterForm()
@@ -1567,13 +1567,13 @@ def clientconversion_view(request):
                 if clientsDict.has_key(tracker.client_id):
                     val = clientsDict[tracker.client_id][1]
                     val.append(tracker)
-                else:
-                    if len(clientsDict) == 1:
-                        for key, value in clientsDict.items():
-                            tracker.client_id = key
-                            tracker.save()
-                        val = clientsDict[tracker.client_id][1]
-                        val.append(tracker)
+#                 else:
+#                     if len(clientsDict) == 1:
+#                         for key, value in clientsDict.items():
+#                             tracker.client_id = key
+#                             tracker.save()
+#                         val = clientsDict[tracker.client_id][1]
+#                         val.append(tracker)
             return render(request, 'oppia/clients-conversion.html', {'form': form, 'clients': clientsDict})
     else:
         form = ClientConversionFilterForm()
