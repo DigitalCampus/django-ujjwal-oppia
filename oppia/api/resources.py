@@ -866,7 +866,7 @@ class ClientsResource(ModelResource):
                         else:
                             clien.pop(key)
                     else:
-                        if key == 'adapted_method' and not is_closed_exist:
+                        if key == 'adapted_method' and is_closed_exist:
                             clien.pop(key)
                         else:
                             clien[naming_convention[key]] = clien.pop(key)
