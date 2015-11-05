@@ -287,6 +287,9 @@ class Activity(models.Model):
     QUIZ = 'quiz'
     ACTIVITY_TYPES = (
         (QUIZ, 'Quiz'),
+        (MEDIA, 'Media'),
+        (PAGE, 'Page'),
+        (FEEDBACK, 'Feedback')
     )
     
     section = models.ForeignKey(Section)
