@@ -414,7 +414,9 @@ class TrackerResource(ModelResource):
                          'badges': self.dehydrate_badges(bundle),
                          'scoring': self.dehydrate_scoring(bundle),
                          'badging': self.dehydrate_badging(bundle),
-                         'metadata': self.dehydrate_metadata(bundle)}
+                         'metadata': self.dehydrate_metadata(bundle),
+                         'course_points': self.dehydrate_course_points(bundle),
+                         }
         response = HttpResponse(content=json.dumps(response_data), content_type="application/json; charset=utf-8")
         return response
 
