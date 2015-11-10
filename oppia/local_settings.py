@@ -2,7 +2,7 @@
 
 def modify(settings):
     
-    settings['INSTALLED_APPS'] += ('oppia.quiz', 'oppia.viz', 'oppia.preview', 'crispy_forms','tastypie',)
+    settings['INSTALLED_APPS'] += ('oppia.quiz', 'oppia.viz', 'oppia.preview', 'crispy_forms','tastypie', 'gcm')
     settings['MIDDLEWARE_CLASSES'] += ('oppia.middleware.LoginRequiredMiddleware',)
     settings['TEMPLATE_CONTEXT_PROCESSORS'] += ('oppia.context_processors.get_points',)
     settings['TEMPLATE_CONTEXT_PROCESSORS'] += ('oppia.context_processors.get_version',)
@@ -73,4 +73,8 @@ def modify(settings):
     settings['OPPIA_MAX_UPLOAD_SIZE'] = 5242880         # max course file upload size - in bytes
     
     settings['API_LIMIT_PER_PAGE'] = 0
+
+    #gcm related settings
+    settings['GCM_APIKEY'] = "AIzaSyD5U4wzGoXPLEF1A2TTMH83GmaW3GBuyQs"
+    settings['GCM_DEVICE_MODEL'] = 'oppia.models.MyDevice'
     

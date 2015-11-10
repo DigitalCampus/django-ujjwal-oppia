@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Max, Sum, Q, F
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from gcm.models import AbstractDevice
 
 from oppia.quiz.models import Quiz, QuizAttempt
 
@@ -862,3 +863,8 @@ class ClientTracker(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     client = models.ForeignKey(Client)
+
+
+class MyDevice(AbstractDevice):
+    #Store additional data in the device model (e.g. foreign key to the user)
+    user = models.ForeignKey(User)
