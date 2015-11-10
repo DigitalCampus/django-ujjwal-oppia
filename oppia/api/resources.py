@@ -38,6 +38,9 @@ from oppia.models import Activity, Section, Tracker, Course, Media, Schedule, Ac
 from oppia.models import Points, Award, Badge, UserProfile, Client, ClientTracker
 from oppia.profile.forms import RegisterForm
 from oppia.signals import course_downloaded
+#gcm related imports
+from gcm.models import get_device_model
+from gcm.resources import DeviceResource
 
 
 class UserResource(ModelResource):
@@ -943,3 +946,19 @@ class ClientTrackerResource(ModelResource):
         tracker.end_time = datetime.datetime.now()
         bundle.obj = tracker
         return bundle
+
+
+class AuthResource(DeviceResource):
+
+    class Meta(DeviceResource.Meta):
+        authentication = ApiKeyAuthentication()
+
+    def get_queryset(self):
+        qs = super(AuthResource, self).get_queryset()
+        # to make sure that user can update only his own devices
+        return qs.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super(AuthResource, self).form_valid(form)
+
