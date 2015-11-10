@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from oppia.api.resources import TrackerResource, CourseResource, ScheduleResource, TagResource, ClientsResource, \
     ClientTrackerResource
 from oppia.api.resources import PointsResource, AwardsResource, BadgesResource, RegisterResource, UserResource, \
-    ResetPasswordResource, AuthResource
+    ResetPasswordResource
 from oppia.quiz.api.resources import QuizResource, QuizPropsResource, QuestionResource
 from oppia.quiz.api.resources import QuizQuestionResource, ResponseResource, QuizAttemptResource
 
@@ -38,13 +38,9 @@ v1_api.register(QuizAttemptResource())
 v1_api.register(ClientsResource())
 v1_api.register(ClientTrackerResource())
 
-v1_api.register(AuthResource())
-
 urlpatterns = patterns('',
                        url(r'^admin/', admin.site.urls, name="admin"),
-                       url(r'', include('gcm.urls')),
                        url(r'^$', 'oppia.views.home_view', name="oppia_home"),
-                       url(r'^notify/$', 'oppia.views.notification_view', name="notify_users"),
                        url(r'^server/$', 'oppia.views.server_view', name="oppia_server"),
                        url(r'^teacher/$', 'oppia.views.teacher_home_view', name="oppia_teacher_home"),
                        url(r'^leaderboard/$', 'oppia.views.leaderboard_view', name="oppia_leaderboard"),

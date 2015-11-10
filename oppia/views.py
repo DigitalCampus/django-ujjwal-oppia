@@ -34,8 +34,6 @@ from oppia.viz.models import UserLocationVisualization
 
 from uploader import handle_uploaded_file
 
-from gcm.models import get_device_model
-
 
 def server_view(request):
     return render_to_response('oppia/server.html',
@@ -1581,25 +1579,3 @@ def clientconversion_view(request):
         form = ClientConversionFilterForm()
 
     return render(request, 'oppia/clients-conversion.html', {'form': form, })
-
-
-def notification_view(request):
-
-    if request.method == 'GET':
-        devices = get_device_model().objects.all()
-        return render(request, 'oppia/notify.html', {'devices': devices})
-
-    else:
-        reg_id = request.POST.get('sender_id')
-        action = request.POST.get('action')
-        #data to be sent
-        message_data = {'type': 'admin', 'action': action}
-        if 'password' in request.POST:
-            password = request.POST.get('password')
-            message_data['password'] = password
-
-        phone = get_device_model().objects.get(reg_id=reg_id)
-        message = phone.send_message(message_data)
-        print message # returns a tuple containing reg_ids as list and response json
-        #return the response object as json
-        return HttpResponse(json.dumps(message[1]))
