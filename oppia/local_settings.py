@@ -75,6 +75,6 @@ def modify(settings):
     settings['API_LIMIT_PER_PAGE'] = 0
 
     #gcm related settings
-    settings['GCM_APIKEY'] = "AIzaSyANyi218Y-Z2EacJbuSilJTaSo3gAPZo-A"
+    settings['GCM_APIKEY'] = "AIzaSyAcP1_6GTT5Eev1fSv1OyoEHRTaaivmsdg"
     settings['GCM_DEVICE_MODEL'] = 'oppia.models.MyDevice'
     
