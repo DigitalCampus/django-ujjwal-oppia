@@ -16,7 +16,7 @@ from django.contrib.auth import (authenticate, logout, views)
 from django.contrib.auth.models import User
 
 from oppia.forms import DateDiffForm, DateRangeIntervalForm
-from oppia.models import CourseDownload, Tracker, Course, ClientTracker, Section, Client, Activity
+from oppia.models import Tracker, Course, ClientTracker, Section, Client, Activity,CourseDownload
 from oppia.viz.models import UserLocationVisualization
 
 
@@ -24,7 +24,7 @@ def summary_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    start_date = timezone.now()  - datetime.timedelta(days=365)
     if request.method == 'POST':
         form = DateDiffForm(request.POST)
         if form.is_valid():
@@ -115,14 +115,13 @@ def summary_view(request):
         languages.append({'lang': _('Other'), 'hits_percent': hits_percent})
 
     # Course Downloads
-    course_downloads = CourseDownload.objects.filter(user__is_staff=False, download_date__gte=start_date). \
-        extra(select={'month': 'extract( month from download_date )',
-                      'year': 'extract( year from download_date )'}). \
-        values('month', 'year'). \
-        annotate(count=Count('id')).order_by('year', 'month')
-
-    previous_course_downloads = CourseDownload.objects.filter(user__is_staff=False,
-                                                              download_date__lt=start_date).count()
+    course_downloads = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=start_date, type='download' ).\
+                        extra(select={'month':'extract( month from submitted_date )',
+                                      'year':'extract( year from submitted_date )'}).\
+                        values('month','year').\
+                        annotate(count=Count('id')).order_by('year','month')
+                        
+    previous_course_downloads = Tracker.objects.filter(user__is_staff=False, submitted_date__lt=start_date, type='download' ).count()
 
     # Course Activity
     course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=start_date). \
@@ -133,7 +132,7 @@ def summary_view(request):
 
     previous_course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__lt=start_date).count()
 
-    last_month = datetime.datetime.now() - datetime.timedelta(days=31)
+    last_month = timezone.now() - datetime.timedelta(days=31)
     hit_by_course = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=last_month).exclude(
         course_id=None).values('course_id').annotate(total_hits=Count('id')).order_by('-total_hits')
     total_hits = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=last_month).exclude(
@@ -467,7 +466,7 @@ def course_activity_view(request):
 
     previous_course_activity = Tracker.objects.filter(user__is_staff=False, submitted_date__lt=start_date).count()
 
-    last_month = datetime.datetime.now() - datetime.timedelta(days=31)
+    last_month = timezone.now() - datetime.timedelta(days=31)
     hit_by_course = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=last_month).exclude(
         course_id=None).values('course_id').annotate(total_hits=Count('id')).order_by('-total_hits')
     total_hits = Tracker.objects.filter(user__is_staff=False, submitted_date__gte=last_month).exclude(
@@ -566,7 +565,7 @@ def films_for_method_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    start_date = timezone.now() - datetime.timedelta(days=365)
     if request.method == 'POST':
         form = DateDiffForm(request.POST)
         if form.is_valid():
@@ -789,7 +788,7 @@ def clients_view(request):
     if not request.user.is_staff:
         raise Http404
 
-    start_date = datetime.datetime.now() - datetime.timedelta(days=365)
+    start_date = timezone.now() - datetime.timedelta(days=365)
     if request.method == 'POST':
         form = DateDiffForm(request.POST)
         if form.is_valid():

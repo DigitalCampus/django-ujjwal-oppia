@@ -17,23 +17,30 @@ from django.http import HttpRequest, HttpResponse, Http404
 from django.utils.translation import ugettext_lazy as _
 
 from tastypie import fields, bundle, http
+from django.db.models import Sum
 from tastypie.authentication import Authentication, ApiKeyAuthentication
 from tastypie.authorization import Authorization, ReadOnlyAuthorization
 from tastypie.exceptions import NotFound, BadRequest, InvalidFilterError
 from tastypie.exceptions import Unauthorized, HydrationError, InvalidSortError, ImmediateHttpResponse
 from tastypie.models import ApiKey
-from tastypie.resources import ModelResource, Resource, convert_post_to_patch, dict_strip_unicode_keys
+from tastypie.resources import ModelResource
+from tastypie.resources import Resource
+from tastypie.resources import convert_post_to_patch
+from tastypie.resources import dict_strip_unicode_keys
 from tastypie.serializers import Serializer
 from tastypie.utils import trailing_slash
 from tastypie.validation import Validation
 
 from oppia.api.serializers import PrettyJSONSerializer, CourseJSONSerializer, UserJSONSerializer, ClientJSONSerializer, \
     ClientTrackerJSONSerializer
-from oppia.models import Activity, Section, Tracker, Course, CourseDownload, Media, Schedule, ActivitySchedule, Cohort, \
+from oppia.models import Activity, Section, Tracker, Course, Media, Schedule, ActivitySchedule, Cohort, \
     Tag, CourseTag
 from oppia.models import Points, Award, Badge, UserProfile, Client, ClientTracker
 from oppia.profile.forms import RegisterForm
 from oppia.signals import course_downloaded
+#gcm related imports
+from gcm.models import get_device_model
+from gcm.resources import DeviceResource
 
 
 class UserResource(ModelResource):
@@ -53,6 +60,7 @@ class UserResource(ModelResource):
     scoring = fields.BooleanField(readonly=True)
     badging = fields.BooleanField(readonly=True)
     metadata = fields.CharField(readonly=True)
+    course_points = fields.CharField(readonly=True)
 
     class Meta:
         queryset = User.objects.all()
@@ -113,6 +121,10 @@ class UserResource(ModelResource):
 
     def dehydrate_metadata(self, bundle):
         return settings.OPPIA_METADATA
+    
+    def dehydrate_course_points(self,bundle):        
+        course_points = list(Points.objects.exclude(course=None).filter(user=bundle.request.user).values('course__shortname').annotate(total_points=Sum('points')))        
+        return course_points
 
 
 class RegisterResource(ModelResource):
@@ -174,6 +186,8 @@ class RegisterResource(ModelResource):
                 user_profile.job_title = bundle.data['jobtitle']
             if 'organisation' in bundle.data:
                 user_profile.organisation = bundle.data['organisation']
+            if 'phoneno' in bundle.data:        
+                user_profile.phone_number= bundle.data['phoneno']
             user_profile.save()
 
             u = authenticate(username=username, password=password)
@@ -236,27 +250,31 @@ class ResetPasswordResource(ModelResource):
             try:
                 bundle.data[r]
             except KeyError:
-                raise BadRequest(_(u'Please enter your %s') % r)
+                 raise BadRequest(_(u'Please enter your username or email address'))
 
         bundle.obj.username = bundle.data['username']
         try:
             user = User.objects.get(username__exact=bundle.obj.username)
-            newpass = User.objects.make_random_password(length=8)
-            user.set_password(newpass)
-            user.save()
-            if bundle.request.is_secure():
-                prefix = 'https://'
-            else:
-                prefix = 'http://'
-            # TODO - better way to manage email message content
-            send_mail('OppiaMobile: Password reset', 'Here is your new password for OppiaMobile: ' + newpass
-                                                     + '\n\nWhen you next log in you can update your password to something more memorable.'
-                                                     + '\n\n' + prefix + bundle.request.META['SERVER_NAME'],
-                      settings.SERVER_EMAIL, [user.email], fail_silently=False)
         except User.DoesNotExist:
-            pass
-
-        return bundle
+            try:
+                user = User.objects.get(email__exact=bundle.obj.username)
+            except User.DoesNotExist:
+                raise BadRequest(_(u'Username/email not found'))
+            
+        newpass = User.objects.make_random_password(length=8)
+        user.set_password(newpass)
+        user.save()
+        if bundle.request.is_secure():
+            prefix = 'https://'
+        else:
+            prefix = 'http://'
+        # TODO - better way to manage email message content
+        send_mail('OppiaMobile: Password reset', 'Here is your new password for OppiaMobile: '+newpass 
+                  + '\n\nWhen you next log in you can update your password to something more memorable.' 
+                  + '\n\n' + prefix + bundle.request.META['SERVER_NAME'] , 
+                  settings.SERVER_EMAIL, [user.email], fail_silently=False) 
+        
+        return bundle 
 
     def dehydrate_message(self, bundle):
         message = _(u'An email has been sent to your registered email address with your new password')
@@ -273,6 +291,7 @@ class TrackerResource(ModelResource):
     scoring = fields.BooleanField(readonly=True)
     badging = fields.BooleanField(readonly=True)
     metadata = fields.CharField(readonly=True)
+    course_points = fields.CharField(readonly=True)
 
     class Meta:
         queryset = Tracker.objects.all()
@@ -378,6 +397,10 @@ class TrackerResource(ModelResource):
 
     def dehydrate_metadata(self, bundle):
         return settings.OPPIA_METADATA
+    
+    def dehydrate_course_points(self,bundle):
+        course_points = list(Points.objects.exclude(course=None).filter(user=bundle.request.user).values('course__shortname').annotate(total_points=Sum('points')))        
+        return course_points
 
     def patch_list(self, request, **kwargs):
         request = convert_post_to_patch(request)
@@ -394,112 +417,134 @@ class TrackerResource(ModelResource):
                          'badges': self.dehydrate_badges(bundle),
                          'scoring': self.dehydrate_scoring(bundle),
                          'badging': self.dehydrate_badging(bundle),
-                         'metadata': self.dehydrate_metadata(bundle)}
+                         'metadata': self.dehydrate_metadata(bundle),
+                         'course_points': self.dehydrate_course_points(bundle),
+                         }
         response = HttpResponse(content=json.dumps(response_data), content_type="application/json; charset=utf-8")
         return response
 
 
 class CourseResource(ModelResource):
+    
     class Meta:
         queryset = Course.objects.all()
         resource_name = 'course'
         allowed_methods = ['get']
-        fields = ['id', 'title', 'version', 'shortname', 'is_draft', 'description']
+        fields = ['id', 'title', 'version', 'shortname','is_draft','description']
         authentication = ApiKeyAuthentication()
-        authorization = ReadOnlyAuthorization()
+        authorization = ReadOnlyAuthorization() 
         serializer = CourseJSONSerializer()
         always_return_data = True
         include_resource_uri = True
-
-    def get_object_list(self, request):
+   
+    def get_object_list(self,request):
         if request.user.is_staff:
             return Course.objects.filter(is_archived=False)
         else:
-            return Course.objects.filter(is_archived=False, is_draft=False)
-
+            return Course.objects.filter(is_archived=False,is_draft=False)
+        
     def prepend_urls(self):
         return [
-            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/download%s$" % (self._meta.resource_name, trailing_slash()),
-                self.wrap_view('download_detail'), name="api_download_detail"),
-        ]
+            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/download%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('download_course'), name="api_download_course"),
+            url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/activity%s$" % (self._meta.resource_name, trailing_slash()), self.wrap_view('download_activity'), name="api_download_activity"),
+            ]
 
-    def download_detail(self, request, **kwargs):
+    def download_course(self, request, **kwargs):
         self.is_authenticated(request)
         self.throttle_check(request)
-
+        
         pk = kwargs.pop('pk', None)
         try:
             if request.user.is_staff:
-                course = self._meta.queryset.get(pk=pk, is_archived=False)
+                course = self._meta.queryset.get(pk = pk,is_archived=False)
             else:
-                course = self._meta.queryset.get(pk=pk, is_archived=False, is_draft=False)
+                course = self._meta.queryset.get(pk = pk, is_archived=False,is_draft=False)
         except Course.DoesNotExist:
-            raise Http404()
-
-        file_to_download = course.getAbsPath()
+            raise Http404(_(u"Course not found"))
+        except ValueError:
+            try:
+                if request.user.is_staff:
+                    course = self._meta.queryset.get(shortname = pk,is_archived=False)
+                else:
+                    course = self._meta.queryset.get(shortname = pk, is_archived=False,is_draft=False)
+            except Course.DoesNotExist:
+                raise Http404(_(u"Course not found"))
+         
+        file_to_download = course.getAbsPath();
         schedule = course.get_default_schedule()
-        has_completed_trackers = Tracker.has_completed_trackers(course, request.user)
-        cohort = Cohort.member_now(course, request.user)
+        has_completed_trackers = Tracker.has_completed_trackers(course,request.user)
+        cohort = Cohort.member_now(course,request.user)
         if cohort:
             if cohort.schedule:
                 schedule = cohort.schedule
-
-        # add scheduling XML file
+        
+        # add scheduling XML file     
         if schedule or has_completed_trackers:
-            file_to_download = settings.COURSE_UPLOAD_DIR + "temp/" + str(request.user.id) + "-" + course.filename
+            file_to_download = settings.COURSE_UPLOAD_DIR +"temp/"+ str(request.user.id) + "-" + course.filename
             shutil.copy2(course.getAbsPath(), file_to_download)
-            zip = zipfile.ZipFile(file_to_download, 'a')
+            zip = zipfile.ZipFile(file_to_download,'a')
             if schedule:
-                zip.writestr(course.shortname + "/schedule.xml", schedule.to_xml_string())
+                zip.writestr(course.shortname +"/schedule.xml",schedule.to_xml_string())
             if has_completed_trackers:
-                zip.writestr(course.shortname + "/tracker.xml", Tracker.to_xml_string(course, request.user))
+                zip.writestr(course.shortname +"/tracker.xml",Tracker.to_xml_string(course,request.user))
             zip.close()
 
         wrapper = FileWrapper(file(file_to_download))
         response = HttpResponse(wrapper, content_type='application/zip')
         response['Content-Length'] = os.path.getsize(file_to_download)
-        response['Content-Disposition'] = 'attachment; filename="%s"' % (course.filename)
-
-        cd = CourseDownload()
-        cd.user = request.user
-        cd.course = course
-        cd.course_version = course.version
-        cd.ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-        cd.agent = request.META.get('HTTP_USER_AGENT', 'unknown')
-        cd.save()
-
+        response['Content-Disposition'] = 'attachment; filename="%s"' %(course.filename)
+        
         # Add to tracker
         tracker = Tracker()
         tracker.user = request.user
         tracker.course = course
         tracker.type = 'download'
-        tracker.data = json.dumps({'version': course.version})
-        tracker.ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-        tracker.agent = request.META.get('HTTP_USER_AGENT', 'unknown')
+        tracker.data = json.dumps({'version':course.version })
+        tracker.ip = request.META.get('REMOTE_ADDR','0.0.0.0')
+        tracker.agent = request.META.get('HTTP_USER_AGENT','unknown')
         tracker.save()
-
+                
         course_downloaded.send(sender=self, course=course, user=request.user)
-
+        
         return response
-
-    def dehydrate(self, bundle):
-        # Include full download url
-        if bundle.request.is_secure():
-            prefix = 'https://'
-        else:
-            prefix = 'http://'
-        bundle.data['url'] = prefix + bundle.request.META['SERVER_NAME'] + bundle.data['resource_uri'] + 'download/'
+    
+    def download_activity(self, request, **kwargs):
+        self.is_authenticated(request)
+        self.throttle_check(request)
+        
+        pk = kwargs.pop('pk', None)
+        try:
+            if request.user.is_staff:
+                course = self._meta.queryset.get(pk = pk,is_archived=False)
+            else:
+                course = self._meta.queryset.get(pk = pk, is_archived=False,is_draft=False)
+        except Course.DoesNotExist:
+            raise Http404(_(u"Course not found"))
+        except ValueError:
+            try:
+                if request.user.is_staff:
+                    course = self._meta.queryset.get(shortname = pk,is_archived=False)
+                else:
+                    course = self._meta.queryset.get(shortname = pk, is_archived=False,is_draft=False)
+            except Course.DoesNotExist:
+                raise Http404(_(u"Course not found"))
+        
+        return HttpResponse(Tracker.to_xml_string(course,request.user), content_type='text/xml')
+    
+    def dehydrate(self, bundle):        
+        bundle.data['url'] = bundle.request.build_absolute_uri(bundle.data['resource_uri'] + 'download/')
+        
         # make sure title is shown as json object (not string representation of one)
         bundle.data['title'] = json.loads(bundle.data['title'])
-
+        
         try:
             bundle.data['description'] = json.loads(bundle.data['description'])
-        except:
+        except: 
             pass
-
+        
         course = Course.objects.get(pk=bundle.obj.pk)
         schedule = course.get_default_schedule()
-        cohort = Cohort.member_now(course, bundle.request.user)
+        cohort = Cohort.member_now(course,bundle.request.user)
         if cohort:
             if cohort.schedule:
                 schedule = cohort.schedule
@@ -507,7 +552,7 @@ class CourseResource(ModelResource):
             bundle.data['schedule'] = schedule.lastupdated_date.strftime("%Y%m%d%H%M%S")
             sr = ScheduleResource()
             bundle.data['schedule_uri'] = sr.get_resource_uri(schedule)
-
+        
         return bundle
 
 
@@ -606,12 +651,16 @@ class TagResource(ModelResource):
         return count
 
     def dehydrate_icon(self, bundle):
-        if bundle.request.is_secure():
-            prefix = 'https://'
-        else:
-            prefix = 'http://'
+#         if bundle.request.is_secure():
+#             prefix = 'https://'
+#         else:
+#             prefix = 'http://'
+#         if bundle.data['icon'] is not None:
+#             return prefix + bundle.request.META['SERVER_NAME'] + bundle.data['icon']
+#         else:
+#             return None
         if bundle.data['icon'] is not None:
-            return prefix + bundle.request.META['SERVER_NAME'] + bundle.data['icon']
+            return bundle.request.build_absolute_uri(bundle.data['icon'])
         else:
             return None
 
@@ -673,11 +722,11 @@ class BadgesResource(ModelResource):
         always_return_data = True
 
     def dehydrate(self, bundle):
-        if bundle.request.is_secure():
-            prefix = 'https://'
-        else:
-            prefix = 'http://'
-        bundle.data['default_icon'] = prefix + bundle.request.META['SERVER_NAME'] + bundle.data['default_icon']
+#         if bundle.request.is_secure():
+#             prefix = 'https://'
+#         else:
+#             prefix = 'http://'
+        bundle.data['default_icon'] = bundle.request.build_absolute_uri(bundle.data['default_icon'])
         return bundle
 
 
@@ -699,12 +748,11 @@ class AwardsResource(ModelResource):
         return super(AwardsResource, self).get_object_list(request).filter(user=request.user)
 
     def dehydrate_badge_icon(self, bundle):
-        if bundle.request.is_secure():
-            prefix = 'https://'
-        else:
-            prefix = 'http://'
-        url = prefix + bundle.request.META['SERVER_NAME'] + settings.MEDIA_URL + bundle.data['badge_icon']
-        return url
+#         if bundle.request.is_secure():
+#             prefix = 'https://'
+#         else:
+#             prefix = 'http://'
+        return bundle.request.build_absolute_uri(settings.MEDIA_URL + bundle.data['badge_icon'])
 
     def dehydrate(self, bundle):
         bundle.data['award_date'] = bundle.data['award_date'].strftime("%Y-%m-%d %H:%M:%S")
@@ -823,7 +871,7 @@ class ClientsResource(ModelResource):
                         else:
                             clien.pop(key)
                     else:
-                        if key == 'adapted_method' and not is_closed_exist:
+                        if key == 'adapted_method' and is_closed_exist:
                             clien.pop(key)
                         else:
                             clien[naming_convention[key]] = clien.pop(key)
@@ -878,7 +926,7 @@ class ClientTrackerResource(ModelResource):
             client_tracker.user = user
             client = Client.objects.get(id=int(session['clientId']))
             client_tracker.client = client
-            client_tracker.save()
+            client_tracker.save(force_insert=True)
         client = Client()
         client.user = user
         client.id = 99999
@@ -898,3 +946,19 @@ class ClientTrackerResource(ModelResource):
         tracker.end_time = datetime.datetime.now()
         bundle.obj = tracker
         return bundle
+
+
+class AuthResource(DeviceResource):
+
+    class Meta(DeviceResource.Meta):
+        authentication = ApiKeyAuthentication()
+
+    def get_queryset(self):
+        qs = super(AuthResource, self).get_queryset()
+        # to make sure that user can update only his own devices
+        return qs.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super(AuthResource, self).form_valid(form)
+
