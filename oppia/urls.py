@@ -138,5 +138,8 @@ urlpatterns = patterns('',
                            name="client-conversions"),
 
                        url(r'^recent-activity/$', 'oppia.views.recent_activity_view', name="recent-activity"),
+                       
+                       # for stress test
+                       url(r'^loaderio-646a0db1eba81182ae92c8e5ef3d9d5d.txt', TemplateView.as_view(template_name="oppia/loaderio-646a0db1eba81182ae92c8e5ef3d9d5d.txt"))
 
 )

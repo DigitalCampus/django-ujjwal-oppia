@@ -21,6 +21,7 @@ def modify(settings):
          r'^api/',                      # allow any URL under api/* - auth handled by api_key
          r'^modules/api/',              # allow any URL under modules/api/* - auth handled by api_key
          r'^badges/api/',                # allow any URL under badges/api/* - auth handled by api_key
+         r'^loaderio-646a0db1eba81182ae92c8e5ef3d9d5d.txt',
     ) 
     
     settings['CRISPY_TEMPLATE_PACK'] = 'bootstrap3'
